@@ -641,12 +641,34 @@ Code.registerBlocksAndGenerators = function() {
 		return "[*** " + parser + " (undone) ***]";
 	};
 
-	var createSingleValueInputBlock = function(bType) {
+	var createBasicBlock = function(bType) {
+        var ubType = bType.toUpperCase();
+        var name = generators[bType]["name"] ? generators[bType]["name"] : bType.substr(0, bType.length-5);
+        return {
+          "type":bType,
+          "message0": name + " %1",
+          "args0": [
+              {
+                  "type":"input_dummy",
+              }
+          ],
+          "helpUrl": "%{BKY_HELPURL_" + ubType + "}",
+          "tooltip": "%{BKY_TOOLTIP_" + ubType + "}",
+          "colour":230
+        };
+    }
+
+    var createParserBlock = function(bType) {
+        var block = createBasicBlock(bType);
+        block["previousStatement"] = "parser";
+        block["nextStatement"] = "parser";
+        return block;
+    }
+
+    var createSingleValueInputBlock = function(bType) {
 		var block = createParserBlock(bType);
 		if (generators[bType]["msg0"] != null) {
 			block["message0"] = generators[bType]["msg0"];
-		} else {
-			block["message0"] = block["message0"];
 		}
 		block["args0"]= [{
 			"type": "input_value",
@@ -660,8 +682,6 @@ Code.registerBlocksAndGenerators = function() {
 		var block = createParserBlock(bType);
 		if (generators[bType]["msg0"] != null) {
 			block["message0"] = generators[bType]["msg0"];
-		} else {
-			block["message0"] = block["message0"];
 		}
 		block["args0"]= [{
 			"type": "input_statement",
@@ -669,30 +689,6 @@ Code.registerBlocksAndGenerators = function() {
 			"check": generators[bType]["check"]
 		}];
 	  	return block;
-	}
-
-	var createBasicBlock = function(bType) {
-		var ubType = bType.toUpperCase();
-		var name = generators[bType]["name"] ? generators[bType]["name"] : bType.substr(0, bType.length-5);
-		return {
-		  "type":bType,
-		  "message0": name + " %1",
-		  "args0": [
-		      {
-		          "type":"input_dummy",
-		      }
-		  ],
-		  "helpUrl": "%{BKY_HELPURL_" + ubType + "}",
-		  "tooltip": "%{BKY_TOOLTIP_" + ubType + "}",
-		  "colour":230
-		};
-	}
-
-	var createParserBlock = function(bType) {
-		var block = createBasicBlock(bType);
-		block["previousStatement"] = "parser";
-		block["nextStatement"] = "parser";
-		return block;
 	}
 
 	var createBlock = function(bType) {
@@ -710,6 +706,8 @@ Code.registerBlocksAndGenerators = function() {
         eol_type:{"name":"end of line","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
         eoi_type:{"name":"end of input","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
         eps_type:{"name":"epsilon","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
+        true_type:{"name":"true","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
+        false_type:{"name":"false","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
         alpha_type:{"name":"alpha","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
         alnum_type:{"name":"alnum","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
         digit_type:{"name":"digit","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
@@ -722,9 +720,6 @@ Code.registerBlocksAndGenerators = function() {
         cntrl_type:{"name":"cntrl","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
         space_type:{"name":"space","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
         blank_type:{"name":"blank","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        true_type:{"name":"true","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
-        false_type:{"name":"false","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
-        char_range_type:{"name":"char range","signature":"char_range","blockgenerator":createBlock,"codegenerator":undone_generator},
         char_set_type:{"name":"char set","signature":"char_set","blockgenerator":createBlock,"codegenerator":args_char_set_generator},
         char_type:{"name":"char","signature":"char","blockgenerator":createBlock,"codegenerator":args_char_generator, "check":"character"},
         as_string_type:{"name":"as_string","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
@@ -762,7 +757,7 @@ Code.registerBlocksAndGenerators = function() {
         dword_type:{"name":"dword","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
         qword_type:{"name":"qword","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
         word_type:{"name":"word","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        ushort_type:{"name":"ushort","blockgenerator":createSingleValueInputBlock,"codegenerator":undone_generator,"check":["integer","all_null_type"],"msg0":"unsigned short: %1"},
+        ushort_type:{"name":"ushort","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"unsigned short: %1"},
         uint_type:{"name":"uint","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"unsigned integer: %1"},
         ulong_type:{"name":"ulong","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"unsigned long: %1"},
         ulong_long_type:{"name":"ulong_long","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"unsigned long long: %1"},
@@ -777,7 +772,6 @@ Code.registerBlocksAndGenerators = function() {
         long_double_type:{"name":"long double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
         double_type:{"name":"double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
         advance_type:{"name":"advance","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"msg0":"advance input by %1", "check":"integer"},
-        attr_type:{"name":"attr","blockgenerator":createSingleValueInputBlock,"codegenerator":undone_generator},
         big_bin_double_type:{"name":"big_bin_double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator, "check":["float", "all_null_type"]},
         big_bin_float_type:{"name":"big_bin_float","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
         little_bin_double_type:{"name":"little_bin_double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
@@ -785,9 +779,12 @@ Code.registerBlocksAndGenerators = function() {
         bin_double_type:{"name":"bin_double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
         bin_float_type:{"name":"bin_float","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
 
+        attr_type:{"name":"attr","blockgenerator":createSingleValueInputBlock,"codegenerator":undone_generator},
+        char_range_type:{"name":"char range","signature":"char_range","blockgenerator":createBlock,"codegenerator":undone_generator},
+
         all_null_type:{"name":"all","blockgenerator":createAllValuesBlock,"codegenerator":no_args_generator,"output":"all_null_type"},
 
-        skip_type:{"name":"skip","blockgenerator":createParserBlock,"codegenerator":args_parser_generator},
+        skip_type:{"name":"skip","blockgenerator":createParserBlock,"codegenerator":args_parser_parser_generator},
         repeat_type:{"name":"repeat","blockgenerator":createParserBlock,"codegenerator":undone_generator},
         bool_type:{"name":"bool","blockgenerator":createParserBlock,"codegenerator":undone_generator},
         symbols_type:{"name":"symbols","blockgenerator":createParserBlock,"codegenerator":undone_generator},
@@ -809,7 +806,7 @@ Code.registerBlocksAndGenerators = function() {
 	}
 
 	Blockly.PHP['all_null_type'] = function(block) {
-		return [ "null", Blockly.PHP.ORDER_NONE];
+		return ["null", Blockly.PHP.ORDER_NONE];
 	};
 
 	Blockly.PHP['rule'] = function(block) {
