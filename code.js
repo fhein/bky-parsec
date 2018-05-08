@@ -1,26 +1,15 @@
 /**
- * Blockly Demos: Code
+ * bky-parsec
  *
- * Copyright 2012 Google Inc.
- * https://developers.google.com/blockly/
+ * Blockly configurator for mxc-parsec parser generator
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Copyright 2018 maxence operations gmbh.
+ * All rights reserved.
  *
- *   http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * http://www.maxence.de/
+
  */
 
-/**
- * @fileoverview JavaScript for Blockly's Code demo.
- * @author fraser@google.com (Neil Fraser)
- */
 'use strict';
 
 /**
@@ -28,7 +17,7 @@
  */
 var Code = {};
 
-var SIGNATURES = {
+Code.SIGNATURES = {
     "no_args": {},
     "single_integer": {
         "message1":"%1",
@@ -106,7 +95,7 @@ var SIGNATURES = {
         ],
         "inputsInline":true
     },
-    "char_set": {
+    "charset": {
         "message1":"%1 : negate %2",
         "args1": [
             {
@@ -122,7 +111,7 @@ var SIGNATURES = {
         ],
         "inputsInline":true
     },
-    "char_range":{
+    "charrange":{
         "message1":"from %1 to %2 : negate %3",
         "args1": [
             {
@@ -142,7 +131,7 @@ var SIGNATURES = {
             }
         ],
         "inputsInline":true
-    }
+    },
 };
 
 /**
@@ -499,43 +488,25 @@ Code.init = function() {
     }
   };
   window.addEventListener('resize', onresize, false);
-
-  // The toolbox XML specifies each category name using Blockly's messaging
-  // format (eg. `<category name="%{BKY_CATLOGIC}">`).
-  // These message keys need to be defined in `Blockly.Msg` in order to
-  // be decoded by the library. Therefore, we'll use the `MSG` dictionary that's
-  // been defined for each language to import each category name message
-  // into `Blockly.Msg`.
-  // TODO: Clean up the message files so this is done explicitly instead of
-  // through this for-loop.
-  for (var messageKey in MSG) {
-    if (messageKey.indexOf('cat') == 0) {
-      Blockly.Msg[messageKey.toUpperCase()] = MSG[messageKey];
-    }
-  }
-
   Code.registerBlocksAndGenerators();
 
-  // Construct the toolbox XML, replacing translated variable names.
-  var toolboxText = document.getElementById('toolbox').outerHTML;
-  toolboxText = toolboxText.replace(/(^|[^%]){(\w+)}/g,
-      function(m, p1, p2) {return p1 + MSG[p2];});
-  var toolboxXml = Blockly.Xml.textToDom(toolboxText);
-  //Code.registerBlocksAndGenerators();
-
+  var toolboxXml = Blockly.Xml.textToDom(Config.getToolbox());
 
   Code.workspace = Blockly.inject('content_blocks',
-      {grid:
-          {spacing: 25,
-           length: 3,
-           colour: '#ccc',
-           snap: true},
-       media: '../../media/',
-       rtl: rtl,
-       toolbox: toolboxXml,
-       zoom:
-           {controls: true,
-            wheel: true}
+      {
+          grid: {
+              spacing: 25,
+              length: 3,
+              colour: '#ccc',
+              snap: true
+          },
+          media: '../../media/',
+          rtl: rtl,
+          toolbox: toolboxXml,
+          zoom: {
+              controls: true,
+              wheel: true
+          }
       });
 
   Code.loadBlocks('');
@@ -643,18 +614,17 @@ Code.registerBlocksAndGenerators = function() {
 
 	var createBasicBlock = function(bType) {
         var ubType = bType.toUpperCase();
-        var name = generators[bType]["name"] ? generators[bType]["name"] : bType.substr(0, bType.length-5);
         return {
           "type":bType,
-          "message0": name + " %1",
+          "message0": "%BKY_" + ubType + "_TITLE",
           "args0": [
               {
                   "type":"input_dummy",
               }
           ],
-          "helpUrl": "%{BKY_HELPURL_" + ubType + "}",
-          "tooltip": "%{BKY_TOOLTIP_" + ubType + "}",
-          "colour":230
+          "helpUrl": "%{BKY_" + ubType + "_HELPURL}",
+          "tooltip": "%{BKY_" + ubType + "_TOOLTIP}",
+          "colour":"%{BKY_" + ubType + "_HUE}"
         };
     }
 
@@ -692,7 +662,7 @@ Code.registerBlocksAndGenerators = function() {
 	}
 
 	var createBlock = function(bType) {
-        return Object.assign(createParserBlock(bType), SIGNATURES[generators[bType]["signature"]]);
+        return Object.assign(createParserBlock(bType), Code.SIGNATURES[generators[bType]["signature"]]);
 	}
 
   	var createAllValuesBlock = function(bType) {
@@ -703,49 +673,50 @@ Code.registerBlocksAndGenerators = function() {
   	}
 
   	var generators = {
-        eol_type:{"name":"end of line","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
-        eoi_type:{"name":"end of input","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
-        eps_type:{"name":"epsilon","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
-        true_type:{"name":"true","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
-        false_type:{"name":"false","signature":"no_args","blockgenerator":createBlock,"codegenerator":no_args_generator},
-        alpha_type:{"name":"alpha","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        alnum_type:{"name":"alnum","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        digit_type:{"name":"digit","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        xdigit_type:{"name":"xdigit","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        upper_type:{"name":"upper","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        lower_type:{"name":"lower","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        graph_type:{"name":"graph","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        print_type:{"name":"print","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        punct_type:{"name":"punct","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        cntrl_type:{"name":"cntrl","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        space_type:{"name":"space","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        blank_type:{"name":"blank","signature":"char_class","blockgenerator":createBlock,"codegenerator":args_char_class_generator},
-        char_set_type:{"name":"char set","signature":"char_set","blockgenerator":createBlock,"codegenerator":args_char_set_generator},
-        char_type:{"name":"char","signature":"char","blockgenerator":createBlock,"codegenerator":args_char_generator, "check":"character"},
-        as_string_type:{"name":"as_string","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        no_skip_type:{"name":"no_skip","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        no_case_type:{"name":"no_case","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        raw_type:{"name":"raw","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        matches_type:{"name":"matches","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        lexeme_type:{"name":"lexeme","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        hold_type:{"name":"hold","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        expect_d_type:{"name":"expect","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        omit_type:{"name":"omit","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser","msg0":"Omit %1"},
-        plus_type:{"name":"plus","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        kleene_type:{"name":"kleene","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        optional_type:{"name":"optional","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        lazy_type:{"name":"lazily do ...","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        not_type:{"name":"not","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        and_type:{"name":"and","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parser_generator,"check":"parser"},
-        difference_type:{"name":"difference","signature":"dual_parser","blockgenerator":createBlock,"codegenerator":args_parser_parser_generator},
-        list_type:{"name":"list","signature":"dual_parser","blockgenerator":createBlock,"codegenerator":args_parser_parser_generator},
-        expect_type:{"name":"expect","signature":"dual_parser","blockgenerator":createBlock,"codegenerator":args_parser_parser_generator},
-        permutation_type:{"name":"permutation","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parserarray_generator},
-        alternative_type:{"name":"alternative","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parserarray_generator},
-        sequence_type:{"name":"sequence","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parserarray_generator},
-        sequential_or_type:{"name":"sequential_or","signature":"single_parser","blockgenerator":createBlock,"codegenerator":args_parserarray_generator},
-        lit_type:{"name":"lit","signature":"string","blockgenerator":createBlock,"codegenerator":args_string_generator},
-        string_type:{"name":"string","signature":"string","blockgenerator":createBlock,"codegenerator":args_string_generator},
+        eol_type:{"name":"end of line","signature":"no_args","codegenerator":no_args_generator},
+        eoi_type:{"name":"end of input","signature":"no_args","codegenerator":no_args_generator},
+        eps_type:{"name":"epsilon","signature":"no_args","codegenerator":no_args_generator},
+        true_type:{"name":"true","signature":"no_args","codegenerator":no_args_generator},
+        false_type:{"name":"false","signature":"no_args","codegenerator":no_args_generator},
+        alpha_type:{"name":"alpha","signature":"char_class","codegenerator":args_char_class_generator},
+        alnum_type:{"name":"alnum","signature":"char_class","codegenerator":args_char_class_generator},
+        digit_type:{"name":"digit","signature":"char_class","codegenerator":args_char_class_generator},
+        xdigit_type:{"name":"xdigit","signature":"char_class","codegenerator":args_char_class_generator},
+        upper_type:{"name":"upper","signature":"char_class","codegenerator":args_char_class_generator},
+        lower_type:{"name":"lower","signature":"char_class","codegenerator":args_char_class_generator},
+        graph_type:{"name":"graph","signature":"char_class","codegenerator":args_char_class_generator},
+        print_type:{"name":"print","signature":"char_class","codegenerator":args_char_class_generator},
+        punct_type:{"name":"punct","signature":"char_class","codegenerator":args_char_class_generator},
+        cntrl_type:{"name":"cntrl","signature":"char_class","codegenerator":args_char_class_generator},
+        space_type:{"name":"space","signature":"char_class","codegenerator":args_char_class_generator},
+        blank_type:{"name":"blank","signature":"char_class","codegenerator":args_char_class_generator},
+        charset_type:{"name":"char set","signature":"charset","codegenerator":args_char_set_generator},
+        char_type:{"name":"char","signature":"char","codegenerator":args_char_generator, "check":"character"},
+        as_string_type:{"name":"as_string","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        no_skip_type:{"name":"no_skip","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        no_case_type:{"name":"no_case","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        raw_type:{"name":"raw","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        matches_type:{"name":"matches","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        lexeme_type:{"name":"lexeme","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        hold_type:{"name":"hold","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        expect_d_type:{"name":"expect","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        omit_type:{"name":"omit","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser","msg0":"Omit %1"},
+        plus_type:{"name":"plus","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        kleene_type:{"name":"kleene","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        optional_type:{"name":"optional","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        lazy_type:{"name":"lazily do ...","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        not_type:{"name":"not","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        and_type:{"name":"and","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
+        difference_type:{"name":"difference","signature":"dual_parser","codegenerator":args_parser_parser_generator},
+        list_type:{"name":"list","signature":"dual_parser","codegenerator":args_parser_parser_generator},
+        expect_type:{"name":"expect","signature":"dual_parser","codegenerator":args_parser_parser_generator},
+        permutation_type:{"name":"permutation","signature":"single_parser","codegenerator":args_parserarray_generator},
+        alternative_type:{"name":"alternative","signature":"single_parser","codegenerator":args_parserarray_generator},
+        sequence_type:{"name":"sequence","signature":"single_parser","codegenerator":args_parserarray_generator},
+        sequential_or_type:{"name":"sequential_or","signature":"single_parser","codegenerator":args_parserarray_generator},
+        lit_type:{"name":"lit","signature":"string","codegenerator":args_string_generator},
+        string_type:{"name":"string","signature":"string","codegenerator":args_string_generator},
+        charrange_type:{"name":"char range","signature":"charrange","codegenerator":undone_generator},
 
         byte_type:{"name":"byte","signature":"single_integer","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
         big_word_type:{"name":"big_word","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
@@ -780,7 +751,6 @@ Code.registerBlocksAndGenerators = function() {
         bin_float_type:{"name":"bin_float","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
 
         attr_type:{"name":"attr","blockgenerator":createSingleValueInputBlock,"codegenerator":undone_generator},
-        char_range_type:{"name":"char range","signature":"char_range","blockgenerator":createBlock,"codegenerator":undone_generator},
 
         all_null_type:{"name":"all","blockgenerator":createAllValuesBlock,"codegenerator":no_args_generator,"output":"all_null_type"},
 
@@ -796,7 +766,11 @@ Code.registerBlocksAndGenerators = function() {
   	var blocks = [];
 
   	for (var bkyType in generators) {
-        blocks.push(generators[bkyType]["blockgenerator"](bkyType));
+  	    if (generators[bkyType]["signature"] != null) {
+  	        blocks.push(createBlock(bkyType));
+  	    } else {
+  	        blocks.push(generators[bkyType]["blockgenerator"](bkyType));
+  	    }
   	}
 
   	Blockly.defineBlocksWithJsonArray(blocks);
