@@ -17,123 +17,6 @@
  */
 var Code = {};
 
-Code.SIGNATURES = {
-    "no_args": {},
-    "single_integer": {
-        "message1":"%1",
-        "args1":[
-            {
-                "type":"input_value",
-                "name":"PARAM1",
-                "check":["integer", "all_null_type"]
-            }
-        ]
-    },
-    "dual_parser": {
-        "message1":"%1 %2",
-        "args1": [
-            {
-                "type":"input_statement",
-                "name":"PARAM1",
-                "check":"parser"
-            },
-            {
-                "type":"input_statement",
-                "name":"PARAM2",
-                "check":"parser"
-            },
-        ],
-
-    },
-    "single_parser": {
-        "message1":"%1",
-        "args1": [
-            {
-                "type":"input_statement",
-                "name":"PARAM",
-                "check":"parser"
-            },
-        ],
-
-    },
-    "char_class":{
-        "message1":"negate %1",
-        "args1": [
-            {
-                "type":"field_checkbox",
-                "name":"NEGATE",
-                "checked":false
-            }
-        ],
-        "inputsInline":true
-    },
-    "char": {
-        "message1":"%1 : negate %2",
-        "args1": [
-            {
-                "type":"field_input",
-                "name":"PARAM",
-                "text":"c"
-            },
-            {
-                "type":"field_checkbox",
-                "name":"NEGATE",
-                "checked":false
-            }
-        ],
-        "inputsInline":true
-    },
-    "string": {
-        "message1":"%1",
-        "args1":[
-            {
-                "type":"field_input",
-                "name":"PARAM",
-                "text":"string",
-                "check":"string"
-            }
-        ],
-        "inputsInline":true
-    },
-    "charset": {
-        "message1":"%1 : negate %2",
-        "args1": [
-            {
-                "type":"field_input",
-                "name":"PARAM",
-                "text":"A-Z0-9"
-            },
-            {
-                "type":"field_checkbox",
-                "name":"NEGATE",
-                "checked":false
-            }
-        ],
-        "inputsInline":true
-    },
-    "charrange":{
-        "message1":"from %1 to %2 : negate %3",
-        "args1": [
-            {
-                "type":"field_input",
-                "name":"PARAM1",
-                "text":"0"
-            },
-            {
-                "type":"field_input",
-                "name":"PARAM2",
-                "text":"9"
-            },
-            {
-                "type":"field_checkbox",
-                "name":"NEGATE",
-                "checked":false
-            }
-        ],
-        "inputsInline":true
-    },
-};
-
 /**
  * Lookup for names of supported languages.  Keys should be in ISO 639 format.
  */
@@ -488,10 +371,11 @@ Code.init = function() {
     }
   };
   window.addEventListener('resize', onresize, false);
-  Code.registerBlocksAndGenerators();
+  Code.registerGenerators();
+  Config.setupMessages();
 
+  Blockly.defineBlocksWithJsonArray(Config.getBlocks());
   var toolboxXml = Blockly.Xml.textToDom(Config.getToolbox());
-
   Code.workspace = Blockly.inject('content_blocks',
       {
           grid: {
@@ -549,12 +433,19 @@ Code.init = function() {
 /**
  * Register generators
  */
-Code.registerBlocksAndGenerators = function() {
-
+Code.registerGenerators = function() {
 	var no_args_generator = function(block) {
 		var parser = generators[block.type]["name"];
 		return '["'+ parser + '", []], ';
 	};
+
+	var no_code_generator = function(block) {
+	    return '';
+	}
+
+	var args_char_set_generator = function(block) {
+	    return "";
+	}
 
 	var args_parser_generator = function(block) {
 		// @todo: sequencer einbauen
@@ -590,20 +481,12 @@ Code.registerBlocksAndGenerators = function() {
 		return '["' + parser + '", [' + value_param + ']], ';
 	};
 
-	var args_char_generator = function(block) {
-        var parser = generators[block.type]["name"];
-        var field_param = block.getFieldValue("PARAM");
-        var field_negate = block.getFieldValue("NEGATE");
-        return '["' + parser + '", ["' + field_param + "\", " + field_negate.toLowerCase() + ']], ';
-	}
-
 	var args_char_class_generator = function(block) {
         var parser = generators[block.type]["name"];
         var field_negate = block.getFieldValue("NEGATE");
         return '["' + parser + '", [' + field_negate.toLowerCase() + ']], ';
     }
 
-	var args_char_set_generator = args_char_generator;
 	var args_float_generator = args_integer_generator;
 	var args_binary_generator = args_integer_generator;
 
@@ -612,168 +495,134 @@ Code.registerBlocksAndGenerators = function() {
 		return "[*** " + parser + " (undone) ***]";
 	};
 
-	var createBasicBlock = function(bType) {
-        var ubType = bType.toUpperCase();
-        return {
-          "type":bType,
-          "message0": "%BKY_" + ubType + "_TITLE",
-          "args0": [
-              {
-                  "type":"input_dummy",
-              }
-          ],
-          "helpUrl": "%{BKY_" + ubType + "_HELPURL}",
-          "tooltip": "%{BKY_" + ubType + "_TOOLTIP}",
-          "colour":"%{BKY_" + ubType + "_HUE}"
-        };
+	//////////////////////////////////////////////////////////////////////////
+	// new
+    var true_generator = function(block) {
+        return [ "true", Blockly.PHP.ORDER_NONE ];
     }
 
-    var createParserBlock = function(bType) {
-        var block = createBasicBlock(bType);
-        block["previousStatement"] = "parser";
-        block["nextStatement"] = "parser";
-        return block;
+    var false_generator = function(block) {
+        return [ "false", Blockly.PHP.ORDER_NONE ];
     }
 
-    var createSingleValueInputBlock = function(bType) {
-		var block = createParserBlock(bType);
-		if (generators[bType]["msg0"] != null) {
-			block["message0"] = generators[bType]["msg0"];
-		}
-		block["args0"]= [{
-			"type": "input_value",
-			"name": "param",
-			"check": generators[bType]["check"]
-		}];
-	  	return block;
-	}
+    var char_range_input_generator = function(block) {
+        var parser = generators[block.type]["parser"];
+        var field_from = block.getFieldValue("PARAM1");
+        var field_to = block.getFieldValue("PARAM2");
+        var code = '["' + parser + '", ["'+field_from+'", "'+field_to+'", ';
+        return [ code, Blockly.PHP.ORDER_NONE ];
+    }
 
-	var createSingleStatementInputBlock = function(bType) {
-		var block = createParserBlock(bType);
-		if (generators[bType]["msg0"] != null) {
-			block["message0"] = generators[bType]["msg0"];
-		}
-		block["args0"]= [{
-			"type": "input_statement",
-			"name": "param",
-			"check": generators[bType]["check"]
-		}];
-	  	return block;
-	}
+    var char_class_input_generator = function(block) {
+        var parser = generators[block.type]["parser"];
+        var code = '["' + parser + '", [';
+        return [ code, Blockly.PHP.ORDER_NONE ];
+    }
 
-	var createBlock = function(bType) {
-        return Object.assign(createParserBlock(bType), Code.SIGNATURES[generators[bType]["signature"]]);
-	}
+    var char_set_input_generator = function(block) {
+        var parser = generators[block.type]["parser"];
+        var field_char_set = block.getFieldValue("PARAM1");
+        var code = '["'+parser+'", ["'+field_char_set+'", ';
+        return [ code, Blockly.PHP.ORDER_NONE ];
+    }
 
-  	var createAllValuesBlock = function(bType) {
-  		var block = createBasicBlock(bType);
-  		block["message0"] = "all %1";
-  		block["output"] = generators[bType]["output"] ? generators[bType]["output"] : null;
-  		return block;
-  	}
+    var char_all_generator = function(block) {
+        var parser = generators[block.type]["parser"];
+        var code = '["'+parser+'", [null, ';
+        return [ code, Blockly.PHP.ORDER_NONE ];
+    }
+
+    var char_generator = function (block) {
+        var negate_param = Blockly.PHP.valueToCode(block, "PARAM1", Blockly.PHP.ORDER_NONE);
+        var parser = Blockly.PHP.valueToCode(block, "PARAM2", Blockly.PHP.ORDER_NONE);
+        var code = parser + negate_param + ']],';
+        return [ code, Blockly.PHP.ORDER_NONE ];
+    }
 
   	var generators = {
-        eol_type:{"name":"end of line","signature":"no_args","codegenerator":no_args_generator},
-        eoi_type:{"name":"end of input","signature":"no_args","codegenerator":no_args_generator},
-        eps_type:{"name":"epsilon","signature":"no_args","codegenerator":no_args_generator},
-        true_type:{"name":"true","signature":"no_args","codegenerator":no_args_generator},
-        false_type:{"name":"false","signature":"no_args","codegenerator":no_args_generator},
-        alpha_type:{"name":"alpha","signature":"char_class","codegenerator":args_char_class_generator},
-        alnum_type:{"name":"alnum","signature":"char_class","codegenerator":args_char_class_generator},
-        digit_type:{"name":"digit","signature":"char_class","codegenerator":args_char_class_generator},
-        xdigit_type:{"name":"xdigit","signature":"char_class","codegenerator":args_char_class_generator},
-        upper_type:{"name":"upper","signature":"char_class","codegenerator":args_char_class_generator},
-        lower_type:{"name":"lower","signature":"char_class","codegenerator":args_char_class_generator},
-        graph_type:{"name":"graph","signature":"char_class","codegenerator":args_char_class_generator},
-        print_type:{"name":"print","signature":"char_class","codegenerator":args_char_class_generator},
-        punct_type:{"name":"punct","signature":"char_class","codegenerator":args_char_class_generator},
-        cntrl_type:{"name":"cntrl","signature":"char_class","codegenerator":args_char_class_generator},
-        space_type:{"name":"space","signature":"char_class","codegenerator":args_char_class_generator},
-        blank_type:{"name":"blank","signature":"char_class","codegenerator":args_char_class_generator},
-        charset_type:{"name":"char set","signature":"charset","codegenerator":args_char_set_generator},
-        char_type:{"name":"char","signature":"char","codegenerator":args_char_generator, "check":"character"},
-        as_string_type:{"name":"as_string","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        no_skip_type:{"name":"no_skip","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        no_case_type:{"name":"no_case","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        raw_type:{"name":"raw","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        matches_type:{"name":"matches","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        lexeme_type:{"name":"lexeme","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        hold_type:{"name":"hold","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        expect_d_type:{"name":"expect","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        omit_type:{"name":"omit","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser","msg0":"Omit %1"},
-        plus_type:{"name":"plus","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        kleene_type:{"name":"kleene","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        optional_type:{"name":"optional","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        lazy_type:{"name":"lazily do ...","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        not_type:{"name":"not","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        and_type:{"name":"and","signature":"single_parser","codegenerator":args_parser_generator,"check":"parser"},
-        difference_type:{"name":"difference","signature":"dual_parser","codegenerator":args_parser_parser_generator},
-        list_type:{"name":"list","signature":"dual_parser","codegenerator":args_parser_parser_generator},
-        expect_type:{"name":"expect","signature":"dual_parser","codegenerator":args_parser_parser_generator},
-        permutation_type:{"name":"permutation","signature":"single_parser","codegenerator":args_parserarray_generator},
-        alternative_type:{"name":"alternative","signature":"single_parser","codegenerator":args_parserarray_generator},
-        sequence_type:{"name":"sequence","signature":"single_parser","codegenerator":args_parserarray_generator},
-        sequential_or_type:{"name":"sequential_or","signature":"single_parser","codegenerator":args_parserarray_generator},
-        lit_type:{"name":"lit","signature":"string","codegenerator":args_string_generator},
-        string_type:{"name":"string","signature":"string","codegenerator":args_string_generator},
-        charrange_type:{"name":"char range","signature":"charrange","codegenerator":undone_generator},
-
-        byte_type:{"name":"byte","signature":"single_integer","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        big_word_type:{"name":"big_word","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        big_dword_type:{"name":"big_dword","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        big_qword_type:{"name":"big_qword","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        little_word_type:{"name":"little_word","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        little_dword_type:{"name":"little_dword","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        little_qword_type:{"name":"little_qword","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        dword_type:{"name":"dword","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        qword_type:{"name":"qword","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        word_type:{"name":"word","blockgenerator":createSingleValueInputBlock,"codegenerator":args_binary_generator,"check":["integer","all_null_type"]},
-        ushort_type:{"name":"ushort","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"unsigned short: %1"},
-        uint_type:{"name":"uint","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"unsigned integer: %1"},
-        ulong_type:{"name":"ulong","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"unsigned long: %1"},
-        ulong_long_type:{"name":"ulong_long","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"unsigned long long: %1"},
-        short_type:{"name":"short","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"short: %1"},
-        int_type:{"name":"int","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"integer: %1"},
-        long_type:{"name":"long","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"long: %1"},
-        long_long_type:{"name":"long_long","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"],"msg0":"long long: %1"},
-        bin_type:{"name":"bin","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer", "all_null_type"]},
-        hex_type:{"name":"hex","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"]},
-        oct_type:{"name":"oct","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"check":["integer","all_null_type"]},
-        float_type:{"name":"float","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
-        long_double_type:{"name":"long double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
-        double_type:{"name":"double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
-        advance_type:{"name":"advance","blockgenerator":createSingleValueInputBlock,"codegenerator":args_integer_generator,"msg0":"advance input by %1", "check":"integer"},
-        big_bin_double_type:{"name":"big_bin_double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator, "check":["float", "all_null_type"]},
-        big_bin_float_type:{"name":"big_bin_float","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
-        little_bin_double_type:{"name":"little_bin_double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
-        little_bin_float_type:{"name":"little_bin_float","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
-        bin_double_type:{"name":"bin_double","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
-        bin_float_type:{"name":"bin_float","blockgenerator":createSingleValueInputBlock,"codegenerator":args_float_generator,"check":["float", "all_null_type"]},
-
-        attr_type:{"name":"attr","blockgenerator":createSingleValueInputBlock,"codegenerator":undone_generator},
-
-        all_null_type:{"name":"all","blockgenerator":createAllValuesBlock,"codegenerator":no_args_generator,"output":"all_null_type"},
-
-        skip_type:{"name":"skip","blockgenerator":createParserBlock,"codegenerator":args_parser_parser_generator},
-        repeat_type:{"name":"repeat","blockgenerator":createParserBlock,"codegenerator":undone_generator},
-        bool_type:{"name":"bool","blockgenerator":createParserBlock,"codegenerator":undone_generator},
-        symbols_type:{"name":"symbols","blockgenerator":createParserBlock,"codegenerator":undone_generator},
-        ruleref_type:{"name":"ruleref","blockgenerator":createParserBlock,"codegenerator":undone_generator},
-        rule_type:{"name":"rule","blockgenerator":createParserBlock,"codegenerator":undone_generator},
-        grammar_type:{"name":"grammar","blockgenerator":createParserBlock,"codegenerator":undone_generator},
+        eol_type:{"parser":"eol","codegenerator":no_args_generator},
+        eoi_type:{"parser":"eoi","codegenerator":no_args_generator},
+        eps_type:{"parser":"eps","codegenerator":no_args_generator},
+        true_type:{"parser":"true","codegenerator":no_args_generator},
+        false_type:{"parser":"false","codegenerator":no_args_generator},
+        alpha_type:{"parser":"alpha","codegenerator":char_class_input_generator},
+        alnum_type:{"parser":"alnum","codegenerator":char_class_input_generator},
+        digit_type:{"parser":"digit","codegenerator":char_class_input_generator},
+        xdigit_type:{"parser":"xdigit","codegenerator":char_class_input_generator},
+        upper_type:{"parser":"upper","codegenerator":char_class_input_generator},
+        lower_type:{"parser":"lower","codegenerator":char_class_input_generator},
+        graph_type:{"parser":"graph","codegenerator":char_class_input_generator},
+        print_type:{"parser":"print","codegenerator":char_class_input_generator},
+        punct_type:{"parser":"punct","codegenerator":char_class_input_generator},
+        cntrl_type:{"parser":"cntrl","codegenerator":char_class_input_generator},
+        space_type:{"parser":"space","codegenerator":char_class_input_generator},
+        blank_type:{"parser":"blank","codegenerator":char_class_input_generator},
+        byte_type:{"parser":"byte","codegenerator":args_binary_generator},
+        dword_type:{"parser":"dword","codegenerator":args_binary_generator},
+        qword_type:{"parser":"qword","codegenerator":args_binary_generator},
+        word_type:{"parser":"word","codegenerator":args_binary_generator},
+        bin_double_type:{"parser":"bin_double","codegenerator":args_float_generator},
+        bin_float_type:{"parser":"bin_float","codegenerator":args_float_generator},
+        char_set_type:{"parser":"char_set","codegenerator":args_char_set_generator},
+        char_set_input_type:{"parser":"char_set","codegenerator":char_set_input_generator},
+        char_range_input_type:{"parser":"char_range","codegenerator":char_range_input_generator},
+        char_input_type:{"parser":"char","codegenerator":char_set_input_generator},
+        char_type:{"parser":"char","codegenerator":char_generator},
+        char_all_type:{"parser":"char","codegenerator":char_all_generator},
+        char_range_type:{"parser":"char_range","codegenerator":undone_generator},
+        as_string_type:{"parser":"as_string","codegenerator":args_parser_generator},
+        no_skip_type:{"parser":"no_skip","codegenerator":args_parser_generator},
+        no_case_type:{"parser":"no_case","codegenerator":args_parser_generator},
+        raw_type:{"parser":"raw","codegenerator":args_parser_generator},
+        matches_type:{"parser":"matches","codegenerator":args_parser_generator},
+        lexeme_type:{"parser":"lexeme","codegenerator":args_parser_generator},
+        hold_type:{"parser":"hold","codegenerator":args_parser_generator},
+        expect_type:{"parser":"expect","codegenerator":args_parser_generator},
+        omit_type:{"parser":"omit","codegenerator":args_parser_generator},
+        plus_type:{"parser":"plus","codegenerator":args_parser_generator},
+        kleene_type:{"parser":"kleene","codegenerator":args_parser_generator},
+        optional_type:{"parser":"optional","codegenerator":args_parser_generator},
+        lazy_type:{"parser":"lazy","codegenerator":args_parser_generator},
+        not_type:{"parser":"not","codegenerator":args_parser_generator},
+        and_type:{"parser":"and","codegenerator":args_parser_generator},
+        difference_type:{"parser":"difference","codegenerator":args_parser_parser_generator},
+        list_type:{"parser":"list","codegenerator":args_parser_parser_generator},
+        permutation_type:{"parser":"permutation","codegenerator":args_parserarray_generator},
+        alternative_type:{"parser":"alternative","codegenerator":args_parserarray_generator},
+        sequence_type:{"parser":"sequence","codegenerator":args_parserarray_generator},
+        sequential_or_type:{"parser":"sequential_or","codegenerator":args_parserarray_generator},
+        ushort_type:{"parser":"ushort","codegenerator":args_integer_generator},
+        uint_type:{"parser":"uint","codegenerator":args_integer_generator},
+        ulong_type:{"parser":"ulong","codegenerator":args_integer_generator},
+        ulong_long_type:{"parser":"ulong_long","codegenerator":args_integer_generator},
+        short_type:{"parser":"short","codegenerator":args_integer_generator},
+        int_type:{"parser":"int","codegenerator":args_integer_generator},
+        long_type:{"parser":"long","codegenerator":args_integer_generator},
+        long_long_type:{"parser":"long_long","codegenerator":args_integer_generator},
+        bin_type:{"parser":"bin","codegenerator":args_integer_generator},
+        hex_type:{"parser":"hex","codegenerator":args_integer_generator},
+        oct_type:{"parser":"oct","codegenerator":args_integer_generator},
+        float_type:{"parser":"float","codegenerator":args_float_generator},
+        long_double_type:{"parser":"long_double","codegenerator":args_float_generator},
+        double_type:{"parser":"double","codegenerator":args_float_generator},
+        advance_type:{"parser":"advance","codegenerator":args_integer_generator},
+        lit_type:{"parser":"lit","signature":"string","codegenerator":args_string_generator},
+        string_type:{"parser":"string","signature":"string","codegenerator":args_string_generator},
+        attr_type:{"parser":"attr","codegenerator":undone_generator},
+        all_null_type:{"prototype":"all_null","codegenerator":no_args_generator},
+        char_negate_true_type:{"prototype":"char_negate","codegenerator":true_generator},
+        char_negate_false_type:{"prototype":"char_negate","codegenerator":false_generator},
+        little_endian_type:{"prototype":"endianness","codegenerator":no_args_generator},
+        big_endian_type:{"prototype":"endianness","codegenerator":no_args_generator},
+        native_endian_type:{"prototype":"endianness","codegenerator":no_args_generator},
+        skip_type:{"parser":"skip","codegenerator":args_parser_parser_generator},
+        repeat_type:{"parser":"repeat","codegenerator":undone_generator},
+        bool_type:{"parser":"bool","codegenerator":undone_generator},
+        symbols_type:{"parser":"symbols","codegenerator":undone_generator},
+        ruleref_type:{"parser":"ruleref","codegenerator":undone_generator},
+        rule_type:{"parser":"rule","codegenerator":undone_generator},
+        grammar_type:{"parser":"grammar","codegenerator":undone_generator},
   	}
-
-  	var blocks = [];
-
-  	for (var bkyType in generators) {
-  	    if (generators[bkyType]["signature"] != null) {
-  	        blocks.push(createBlock(bkyType));
-  	    } else {
-  	        blocks.push(generators[bkyType]["blockgenerator"](bkyType));
-  	    }
-  	}
-
-  	Blockly.defineBlocksWithJsonArray(blocks);
 
 	for (var bkyType in generators) {
 		Blockly.PHP[bkyType] = generators[bkyType]['codegenerator'];
