@@ -242,18 +242,18 @@ JsonBlockBuilder.prototype.createBlock = function(bType, proto) {
         case 'grammar':
             return this
                 .addInput(0, {type:'input_dummy'}, '%message% %%')
-                .addInput(1, {type:'field_input', text:'new grammar'}, '%message% %%')
-                .addInput(2,{type:'input_dummy'}, '%message% %%')
-                .addInput(3,{type:'input_statement', check:'reference'}, '%%')
-                .addInput(4,{type:'field_dropdown',options:[['hello','hello'], ['world', 'world']]}, '%message% %%')
+                .addInput(0, {type:'field_input', text:'new grammar'}, '%message% %%')
+                .addInput(1,{type:'input_dummy'}, '%message% %%')
+                .addInput(1,{type:'input_statement', check:'reference'}, '%%')
+                .addInput(0,{type:'field_dropdown',options:[['hello','hello'], ['world', 'world']]}, '%message% %%')
                 .get();
 
         case 'rule':
             return this
                 .addInput(0, {type:'input_dummy'},'%message% %%')
-                .addInput(1, {type:'field_input', text:'new rule'}, '%message% %%')
-                .addInput(2,{type:'input_dummy'}, '%message% %%')
-                .addInput(3,{type:'input_statement',check:'parser'},  '%%')
+                .addInput(0, {type:'field_input', text:'new rule'}, '%message% %%')
+                .addInput(1,{type:'input_dummy'}, '%message% %%')
+                .addInput(1,{type:'input_statement',check:'parser'},  '%%')
                 .get();
 
         case 'ref':
