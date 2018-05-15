@@ -17,6 +17,16 @@
  */
 var Code = {};
 
+function customContextMenuFn(options) {
+    var option = {
+      enabled: true,
+      text: "Custom option",
+      callback: function() {
+        console.log('Custom context menu option called');
+      }
+    };
+    options.push(option);
+  }
 /**
  * Lookup for names of supported languages.  Keys should be in ISO 639 format.
  */
@@ -371,7 +381,7 @@ Code.init = function() {
     }
   };
   window.addEventListener('resize', onresize, false);
-  Code.registerGenerators();
+  Generator.registerGenerators();
   Config.setupMessages();
 
   Blockly.defineBlocksWithJsonArray(Config.getBlocks());
@@ -392,6 +402,7 @@ Code.init = function() {
               wheel: true
           }
       });
+  Code.workspace.configureContextMenu = customContextMenuFn;
 
   Code.loadBlocks('');
 
@@ -429,249 +440,6 @@ Code.init = function() {
   // Lazy-load the syntax-highlighting.
   window.setTimeout(Code.importPrettify, 1);
 };
-
-/**
- * Register generators
- */
-Code.registerGenerators = function() {
-	var no_args_generator = function(block) {
-		var parser = generators[block.type]["name"];
-		return '["'+ parser + '", []], ';
-	};
-
-	var no_code_generator = function(block) {
-	    return '';
-	}
-
-	var args_char_set_generator = function(block) {
-	    return "";
-	}
-
-	var args_parser_generator = function(block) {
-		// @todo: sequencer einbauen
-		var parser = generators[block.type]["name"];
-		var statements_param = Blockly.PHP.statementToCode(block, "PARAM");
-		return '["'+ parser + '", [' + statements_param + ']], ';
-	};
-
-	var args_parser_parser_generator = function(block) {
-        // @todo: sequencer einbauen
-        var parser = generators[block.type]["name"];
-        var statements_param1 = Blockly.PHP.statementToCode(block, 'PARAM1');
-        var statements_param2 = Blockly.PHP.statementToCode(block, 'PARAM2');
-        return '["'+ parser + '", [' + statements_param1 + statements_param2
-        + '], ';
-    };
-
-    var args_parserarray_generator = function(block) {
-        var parser = generators[block.type]["name"];
-        var statements_param = Blockly.PHP.statementToCode(block, 'PARAM');
-        return '["'+parser+'", [[' + statements_param + ']]], ';
-    };
-
-    var args_string_generator = function(block) {
-        var parser = generators[block.type]["name"];
-        var field_param = block.getFieldValue("PARAM");
-        return '["' + parser + '", ["' + field_param + '"]], ';
-    };
-
-    var args_integer_generator = function(block) {
-		var parser = generators[block.type]["name"];
-		var value_param = Blockly.PHP.valueToCode(block, "PARAM", Blockly.PHP.ORDER_NONE);
-		return '["' + parser + '", [' + value_param + ']], ';
-	};
-
-	var args_char_class_generator = function(block) {
-        var parser = generators[block.type]["name"];
-        var field_negate = block.getFieldValue("NEGATE");
-        return '["' + parser + '", [' + field_negate.toLowerCase() + ']], ';
-    }
-
-	var args_float_generator = args_integer_generator;
-	var args_binary_generator = args_integer_generator;
-
-	var undone_generator = function(block) {
-		var parser = generators[block.type]["name"];
-		return "[*** " + parser + " (undone) ***]";
-	};
-
-	//////////////////////////////////////////////////////////////////////////
-	// new
-    var true_generator = function(block) {
-        return [ "true", Blockly.PHP.ORDER_NONE ];
-    }
-
-    var false_generator = function(block) {
-        return [ "false", Blockly.PHP.ORDER_NONE ];
-    }
-
-    var char_range_input_generator = function(block) {
-        var parser = generators[block.type]["parser"];
-        var field_from = block.getFieldValue("PARAM1");
-        var field_to = block.getFieldValue("PARAM2");
-        var code = '["' + parser + '", ["'+field_from+'", "'+field_to+'", ';
-        return [ code, Blockly.PHP.ORDER_NONE ];
-    }
-
-    var char_class_input_generator = function(block) {
-        var parser = generators[block.type]["parser"];
-        var code = '["' + parser + '", [';
-        return [ code, Blockly.PHP.ORDER_NONE ];
-    }
-
-    var char_set_input_generator = function(block) {
-        var parser = generators[block.type]["parser"];
-        var field_char_set = block.getFieldValue("PARAM1");
-        var code = '["'+parser+'", ["'+field_char_set+'", ';
-        return [ code, Blockly.PHP.ORDER_NONE ];
-    }
-
-    var char_all_generator = function(block) {
-        var parser = generators[block.type]["parser"];
-        var code = '["'+parser+'", [null, ';
-        return [ code, Blockly.PHP.ORDER_NONE ];
-    }
-
-    var char_generator = function (block) {
-        var negate_param = Blockly.PHP.valueToCode(block, "PARAM1", Blockly.PHP.ORDER_NONE);
-        var parser = Blockly.PHP.valueToCode(block, "PARAM2", Blockly.PHP.ORDER_NONE);
-        var code = parser + negate_param + ']],';
-        return [ code, Blockly.PHP.ORDER_NONE ];
-    }
-
-  	var generators = {
-        eol_type:{"parser":"eol","codegenerator":no_args_generator},
-        eoi_type:{"parser":"eoi","codegenerator":no_args_generator},
-        eps_type:{"parser":"eps","codegenerator":no_args_generator},
-        true_type:{"parser":"true","codegenerator":no_args_generator},
-        false_type:{"parser":"false","codegenerator":no_args_generator},
-        alpha_type:{"parser":"alpha","codegenerator":char_class_input_generator},
-        alnum_type:{"parser":"alnum","codegenerator":char_class_input_generator},
-        digit_type:{"parser":"digit","codegenerator":char_class_input_generator},
-        xdigit_type:{"parser":"xdigit","codegenerator":char_class_input_generator},
-        upper_type:{"parser":"upper","codegenerator":char_class_input_generator},
-        lower_type:{"parser":"lower","codegenerator":char_class_input_generator},
-        graph_type:{"parser":"graph","codegenerator":char_class_input_generator},
-        print_type:{"parser":"print","codegenerator":char_class_input_generator},
-        punct_type:{"parser":"punct","codegenerator":char_class_input_generator},
-        cntrl_type:{"parser":"cntrl","codegenerator":char_class_input_generator},
-        space_type:{"parser":"space","codegenerator":char_class_input_generator},
-        blank_type:{"parser":"blank","codegenerator":char_class_input_generator},
-        byte_type:{"parser":"byte","codegenerator":args_binary_generator},
-        dword_type:{"parser":"dword","codegenerator":args_binary_generator},
-        qword_type:{"parser":"qword","codegenerator":args_binary_generator},
-        word_type:{"parser":"word","codegenerator":args_binary_generator},
-        bin_double_type:{"parser":"bin_double","codegenerator":args_float_generator},
-        bin_float_type:{"parser":"bin_float","codegenerator":args_float_generator},
-        char_set_type:{"parser":"char_set","codegenerator":args_char_set_generator},
-        char_set_input_type:{"parser":"char_set","codegenerator":char_set_input_generator},
-        char_range_input_type:{"parser":"char_range","codegenerator":char_range_input_generator},
-        char_input_type:{"parser":"char","codegenerator":char_set_input_generator},
-        char_type:{"parser":"char","codegenerator":char_generator},
-        char_all_type:{"parser":"char","codegenerator":char_all_generator},
-        char_range_type:{"parser":"char_range","codegenerator":undone_generator},
-        as_string_type:{"parser":"as_string","codegenerator":args_parser_generator},
-        no_skip_type:{"parser":"no_skip","codegenerator":args_parser_generator},
-        no_case_type:{"parser":"no_case","codegenerator":args_parser_generator},
-        raw_type:{"parser":"raw","codegenerator":args_parser_generator},
-        matches_type:{"parser":"matches","codegenerator":args_parser_generator},
-        lexeme_type:{"parser":"lexeme","codegenerator":args_parser_generator},
-        hold_type:{"parser":"hold","codegenerator":args_parser_generator},
-        expect_type:{"parser":"expect","codegenerator":args_parser_generator},
-        omit_type:{"parser":"omit","codegenerator":args_parser_generator},
-        plus_type:{"parser":"plus","codegenerator":args_parser_generator},
-        kleene_type:{"parser":"kleene","codegenerator":args_parser_generator},
-        optional_type:{"parser":"optional","codegenerator":args_parser_generator},
-        lazy_type:{"parser":"lazy","codegenerator":args_parser_generator},
-        not_type:{"parser":"not","codegenerator":args_parser_generator},
-        and_type:{"parser":"and","codegenerator":args_parser_generator},
-        difference_type:{"parser":"difference","codegenerator":args_parser_parser_generator},
-        list_type:{"parser":"list","codegenerator":args_parser_parser_generator},
-        permutation_type:{"parser":"permutation","codegenerator":args_parserarray_generator},
-        alternative_type:{"parser":"alternative","codegenerator":args_parserarray_generator},
-        sequence_type:{"parser":"sequence","codegenerator":args_parserarray_generator},
-        sequential_or_type:{"parser":"sequential_or","codegenerator":args_parserarray_generator},
-        ushort_type:{"parser":"ushort","codegenerator":args_integer_generator},
-        uint_type:{"parser":"uint","codegenerator":args_integer_generator},
-        ulong_type:{"parser":"ulong","codegenerator":args_integer_generator},
-        ulong_long_type:{"parser":"ulong_long","codegenerator":args_integer_generator},
-        short_type:{"parser":"short","codegenerator":args_integer_generator},
-        int_type:{"parser":"int","codegenerator":args_integer_generator},
-        long_type:{"parser":"long","codegenerator":args_integer_generator},
-        long_long_type:{"parser":"long_long","codegenerator":args_integer_generator},
-        bin_type:{"parser":"bin","codegenerator":args_integer_generator},
-        hex_type:{"parser":"hex","codegenerator":args_integer_generator},
-        oct_type:{"parser":"oct","codegenerator":args_integer_generator},
-        float_type:{"parser":"float","codegenerator":args_float_generator},
-        long_double_type:{"parser":"long_double","codegenerator":args_float_generator},
-        double_type:{"parser":"double","codegenerator":args_float_generator},
-        advance_type:{"parser":"advance","codegenerator":args_integer_generator},
-        lit_type:{"parser":"lit","signature":"string","codegenerator":args_string_generator},
-        string_type:{"parser":"string","signature":"string","codegenerator":args_string_generator},
-        attr_type:{"parser":"attr","codegenerator":undone_generator},
-        all_null_type:{"prototype":"all_null","codegenerator":no_args_generator},
-        char_negate_true_type:{"prototype":"char_negate","codegenerator":true_generator},
-        char_negate_false_type:{"prototype":"char_negate","codegenerator":false_generator},
-        little_endian_type:{"prototype":"endianness","codegenerator":no_args_generator},
-        big_endian_type:{"prototype":"endianness","codegenerator":no_args_generator},
-        native_endian_type:{"prototype":"endianness","codegenerator":no_args_generator},
-        skip_type:{"parser":"skip","codegenerator":args_parser_parser_generator},
-        repeat_type:{"parser":"repeat","codegenerator":undone_generator},
-        bool_type:{"parser":"bool","codegenerator":undone_generator},
-        symbols_type:{"parser":"symbols","codegenerator":undone_generator},
-        ruleref_type:{"parser":"ruleref","codegenerator":undone_generator},
-        rule_type:{"parser":"rule","codegenerator":undone_generator},
-        grammar_type:{"parser":"grammar","codegenerator":undone_generator},
-  	}
-
-	for (var bkyType in generators) {
-		Blockly.PHP[bkyType] = generators[bkyType]['codegenerator'];
-	}
-
-	Blockly.PHP['all_null_type'] = function(block) {
-		return ["null", Blockly.PHP.ORDER_NONE];
-	};
-
-	Blockly.PHP['rule'] = function(block) {
-		var variable_rulename = Blockly.PHP.variableDB_.getName(block
-				.getFieldValue('ruleName'), Blockly.Variables.NAME_TYPE);
-		var statements_ruleparser = Blockly.PHP.statementToCode(block,
-				'ruleParser');
-		// TODO: Assemble PHP into code variable.
-		var code = '...;\n';
-		return code;
-	};
-
-	Blockly.PHP['grammar'] = function(block) {
-		var variable_name = Blockly.PHP.variableDB_.getName(block
-				.getFieldValue('name'), Blockly.Variables.NAME_TYPE);
-		var variable_startrulename = Blockly.PHP.variableDB_.getName(block
-				.getFieldValue('startRuleName'), Blockly.Variables.NAME_TYPE);
-		var statements_grammarparser = Blockly.PHP.statementToCode(block,
-				'grammarParser');
-		// TODO: Assemble PHP into code variable.
-		var code = '...;\n';
-		return code;
-	};
-
-	Blockly.PHP['rulereference'] = function(block) {
-		var variable_rulename = Blockly.PHP.variableDB_.getName(block
-				.getFieldValue('ruleName'), Blockly.Variables.NAME_TYPE);
-		// TODO: Assemble PHP into code variable.
-		var code = '...;\n';
-		return code;
-	};
-
-	Blockly.PHP['variables_set_panda'] = function(block) {
-		var variable_name = Blockly.PHP.variableDB_.getName(block
-				.getFieldValue('NAME'), Blockly.Variables.NAME_TYPE);
-		var value_name = Blockly.PHP.valueToCode(block, 'NAME',
-				Blockly.PHP.ORDER_ATOMIC);
-		// TODO: Assemble PHP into code variable.
-		var code = '...;\n';
-		return code;
-	};
-}
 
 /**
  * Initialize the page language.
