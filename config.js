@@ -1,285 +1,198 @@
 var Config = {};
 
-String.prototype.toUnderScore = function() {
-    return this.replace(/\.?([A-Z]+)/g, function (x,y){return '_' + y.toLowerCase()}).replace(/^_/, '');
-}
-
-String.prototype.toCamelCase = function() {
-    return this.replace(/_+/g,' ').replace(/(?:^\w|[A-Z]|\b\w)/g, function(letter, index) {
-        return index == 0 ? letter.toLowerCase() : letter.toUpperCase();
-    }).replace(/[\s]+/g, '');
-}
-
-function JsonBlockBuilder() {
-}
-
-JsonBlockBuilder.prototype.get = function() {
-
-    var paramIdx = 1;
-
-    for (var i = 0; this.block['args' + i]; i++) {
-        for (var arg of this.block['args' + i]) {
-            if (arg['type'] !== 'input_dummy') {
-                arg['name'] = 'PARAM'+paramIdx++;
-            }
-        }
-    }
-    paramIdx = 1;
-    for (var i = 0; this.block['message' + i]; i++) {
-        var replace = '';
-        var argParamIdx = 1;
-        for (var msg of this.block['message'+i]) {
-          msg = msg.replace('%title%', this.title)
-          msg = msg.replace('%message%', this.prefix + 'MSG'+ paramIdx++ +'}')
-          msg = msg.replace('%%', '%' + argParamIdx++);
-          replace += ' ' + msg;
-        }
-        this.block['message'+i] = replace;
-    }
-    return this.block;
-}
-
-JsonBlockBuilder.prototype.create = function(bType) {
-    this.ubType = bType.toUpperCase().substr(0,bType.length-5);
-    prefix = '%{BKY_' + this.ubType + '_';
-    helpUrl = prefix + 'HELPURL}';
-    tooltip = prefix + 'TOOLTIP}';
-    colour =  prefix + 'HUE}';
-    this.prefix = prefix;
-
-    this.block = {type:bType, 'helpUrl':helpUrl, 'tooltip':tooltip, 'colour':colour};
-    return this;
-}
-
-JsonBlockBuilder.prototype.addInput = function(idx, input, msg) {
-    var m = 'message' + idx;
-    var a = 'args' + idx;
-    var msg = msg ? msg : this.prefix + ('MSG'+idx)+'} %%';
-
-
-    if (this.block[a]) {
-        this.block[a].push(input);
-        this.block[m].push(msg);
-    } else {
-        this.block[a] = [input];
-        this.block[m] = [msg];
-    }
-    return this;
-}
-
-JsonBlockBuilder.prototype.inputsInline = function(b) {
-    this.block.inputsInline = b ? b : undefined;
-    return this;
-}
-
-JsonBlockBuilder.prototype.setOutput = function(b) {
-    this.block.nextStatement = undefined;
-    this.block.previousStatement = undefined;
-    this.block.output = b ? b : null;
-    return this;
-}
-
-JsonBlockBuilder.prototype.addParserConnections = function(accept) {
-    accept = accept === undefined ? 'parser' : accept;
-    this.block.nextStatement = accept;
-    this.block.previousStatement = accept;
-    return this;
-}
-
-JsonBlockBuilder.prototype.createBlock = function(bType, proto) {
-    this.create(bType);
+Config.createBlock = function(bType, proto) {
+    this.jbb.create(bType);
     switch(proto) {
         case 'no_args':
-            return this
-                .addInput(0, {type:'input_dummy'}, '%message% %%')
-                .addParserConnections()
-                .get();
+            this.jbb
+                .addInput(0, {type:'input_dummy'})
+                .addParserConnections();
+            break;
 
         case 'char':
-            return this
+            this.jbb
                 .addParserConnections()
                 .addInput(0, {type:'input_value', check:'char_negate'}, '%% %message%')
                 .addInput(0, {type:'input_value', check:['char_input', 'char_all']}, '%%')
-                .inputsInline(true)
-                .get();
-
-        case 'char':
-            return this
-                .addParserConnections()
-                .addInput(0, {type:'input_value', check:'char_negate'}, '%% %message%')
-                .addInput(0, {type:'input_value', check:['char_input', 'char_all']}, '%%')
-                .inputsInline(true)
-                .get();
+                .inputsInline(true);
+            break;
 
         case 'integer_accept_all':
-            return this
+            this.jbb
                 .addParserConnections()
                 .addInput(0, {type:'input_value',check:'integer_select'}, '%% %message%')
                 .addInput(0, {type:'input_value',check:['integer_input', 'integer_all']}, '%%')
                 .inputsInline(true)
-                .get();
+                .setExtensions(['onchange_stack','onchange_warning_example', 'onchange_restore_default_colour']);
+            break;
 
 
         case 'binary_accept_all':
         case 'float_accept_all':
             var type = proto.substr(0,proto.indexOf('_'));
-            return this
+            this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_value',check:[type + '_input', type + '_all']}, '%message% %%')
-                .inputsInline(true)
-                .get();
+                .addInput(0, {type:'input_value',check:[type + '_input', type + '_all']})
+                .inputsInline(true);
+            break;
 
         case 'char_input':
-            return this
+            this.jbb
                 .addInput(0, {type:'field_input',text:'a',check:'string'}, '%%')
-                .setOutput('char_input')
-                .get();
+                .setOutput('char_input');
+            break;
 
         case 'no_skip':
-            return this
+            this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_value', check:['preskipper', 'preskipper_all']}, '%message% %%')
+                .addInput(0, {type:'input_value', check:['preskipper', 'preskipper_all']})
                 .addInput(0, {type:'input_statement',check:'parser'}, '%%')
-                .inputsInline(true)
-                .get();
+                .inputsInline(true);
+            break;
 
 
         case 'binary_input':
         case 'float_input':
         case 'integer_input':
-            return this
-                .addInput(0, {type:'field_number',text:123}, '%%')
-                .setOutput(proto)
-                .get();
+            this.jbb
+                .addInput(0, {type:'field_number',value:123}, '%%')
+                .setOutput(proto);
+            break;
 
         case 'char_set_input':
-            return this
-                .addInput(0, {type:'field_input',text:'A-Z0-9',check:'string'}, '%message% %%')
-                .setOutput('char_input')
-                .get();
+            this.jbb
+                .addInput(0, {type:'field_input',text:'A-Z0-9'})
+                .setOutput('char_input');
+            break;
 
         case 'char_range_input':
-            return this
-                .addInput(0, {type:'field_input',text:'0'}, '%message% %%')
-                .addInput(0, {type:'field_input',text:'9'}, '%message% %%')
-                .setOutput('char_input')
-                .get();
-
-        case 'integer_range_input':
-            return this
-                .addInput(0, {type:'field_number',value:0}, '%message% %%')
-                .addInput(0, {type:'field_number',value:9}, '%message% %%')
-                .setOutput('integer_input')
-                .get();
-
-        case 'integer_digits_input':
-            return this
-                .addInput(0, {type:'field_number',value:0}, '%message% %%')
-                .addInput(0, {type:'field_number',value:9}, '%message% %%')
-                .setOutput('integer_input')
-                .get();
+            this.jbb
+                .addInput(0, {type:'field_input',text:'0'})
+                .addInput(0, {type:'field_input',text:'9'})
+                .setOutput('char_input');
+            break;
 
         case 'char_class_input':
-            return this
-                .addInput(0, {type:'input_dummy'}, '%message% %%')
-                .setOutput('char_input')
-                .get();
+            this.jbb
+                .addInput(0, {type:'input_dummy'})
+                .setOutput('char_input');
+            break;
+
+        // note: code generators are different for the next both
+        case 'integer_digits_input':
+        case 'integer_range_input':
+            this.jbb
+                .addInput(0, {type:'field_number',value:0})
+                .addInput(0, {type:'field_number',value:9})
+                .setOutput('integer_input')
+                .setExtensions(['onchange_stack', 'onchange_get_parent_colour']);
+            break;
 
         case 'string':
-            return this
+            this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'field_input',text:'string'}, '%message% %%')
-                .inputsInline(true)
-                .get();
+                .addInput(0, {type:'field_input',text:'string'})
+                .inputsInline(true);
+            break;
 
         case 'float':
         case 'integer':
-            return this
+            this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_value',check:proto}, '%message% %%')
+                .addInput(0, {type:'input_value',check:proto})
                 .inputsInline(true)
-                .get();
+                .setExtensions(['onchange_stack', 'onchange_set_parent_colour']);
+            break;
 
         case 'binary':
-            return this
+            this.jbb
                 .addParserConnections()
-                .addInput(0,{type:'input_value', check:['binary_input', 'binary_all']}, '%message% %%')
+                .addInput(0,{type:'input_value', check:['binary_input', 'binary_all']})
                 .addInput(0,{type:'input_value', check:'endianness'}, '%%')
-                .inputsInline(true)
-                .get();
-
-        case 'single_parser':
-            return this
-                .addParserConnections()
-                .addInput(0, {type:'input_dummy'}, '%message% %%')
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%')
-                .get();
+                .inputsInline(true);
+            break;
 
         case 'dual_parser':
-            return this
+            this.jbb
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'input_statement',check:'parser'}, '%%')
+
+                // intentional fall through
+        case 'single_parser':
+            this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_dummy'}, '%message% %%')
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%')
-                .addInput(0, {type:'input_dummy'}, '%message% %%')
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%')
-                .get();
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'input_statement',check:'parser'}, '%%');
+            break;
 
         case 'integer_field':
-            return this
+            this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'field_number',check:'integer'}, '%message% %%')
-                .inputsInline(true)
-                .get();
+                .addInput(0, {type:'field_number',value:123})
+                .inputsInline(true);
+            break;
 
         case 'accept_all':
-            return this
+            this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_value'}, '%message% %%')
-                .inputsInline(true)
-                .get();
+                .addInput(0, {type:'input_value'})
+                .inputsInline(true);
+            break;
 
 
         case 'grammar':
-            return this
-                .addInput(0, {type:'input_dummy'}, '%message% %%')
-                .addInput(0, {type:'field_input', text:'new grammar'}, '%message% %%')
-                .addInput(1,{type:'input_dummy'}, '%message% %%')
+            this.jbb
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'field_input', text:'new grammar'})
+                .addInput(1,{type:'input_dummy'})
                 .addInput(1,{type:'input_statement', check:'reference'}, '%%')
-                .addInput(0,{type:'field_dropdown',options:[['hello','hello'], ['world', 'world']]}, '%message% %%')
-                .get();
+                .addInput(0,{type:'field_dropdown',options:[['hello','hello'], ['world', 'world']]});
+            break;
 
         case 'rule':
-            return this
-                .addInput(0, {type:'input_dummy'},'%message% %%')
-                .addInput(0, {type:'field_input', text:'new rule'}, '%message% %%')
-                .addInput(1,{type:'input_dummy'}, '%message% %%')
-                .addInput(1,{type:'input_statement',check:'parser'},  '%%')
-                .get();
+            this.jbb
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'field_input', text:'new rule'})
+                .addInput(1,{type:'input_dummy'})
+                .addInput(1,{type:'input_statement',check:'parser'},  '%%');
+            break;
 
         case 'ref':
-            return this
+            this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_dummy'},'%message% %%')
-                .addInput(1, {type:'field_dropdown', options:[['hello','hello'], ['world', 'world']]}, '%message% %%')
-                .get();
+                .addInput(0, {type:'input_dummy'})
+                .addInput(1, {type:'field_dropdown', options:[['hello','hello'], ['world', 'world']]})
+            break;
 
         case 'binary_all':
         case 'char_all':
         case 'integer_all':
         case 'float_all':
         case 'preskipper_all':
-            return this
+            this.jbb
                 .addInput(0, {type:'input_dummy'}, '%%')
                 .setOutput(proto)
-                .get();
+                .setExtensions(['onchange_stack', 'onchange_get_parent_colour', /*'onchange_became_topblock'*/]);
+            break;
+
+        case 'integer_select':
+            this.jbb
+                .addInput(0, {type:'input_dummy'})
+                .setOutput(proto)
+                .setExtensions(['test', 'onchange_stack', 'use_parent_tooltip', 'onchange_set_parent_colour', /*'onchange_became_topblock'*/]);
+            break;
 
         default:
-            return this
-                .addInput(0, {type:'input_dummy'}, '%message% %%')
-                .setOutput(proto)
-                .get();
+            this.jbb
+                .addInput(0, {type:'input_dummy'})
+                .setOutput(proto);
+            break;
      }
+
+    return this.jbb.get();
 }
+
+
 
 Config.shadows = {
         'allNullShadow':     [['value','PARAM1','shadow','integer_all_type']],
@@ -422,7 +335,7 @@ Config.categories = [{
             {type:'integer_input_type', proto: 'integer_input'},
             {type:'integer_range_input_type', proto: 'integer_range_input'},
             {type:'integer_digits_input_type', proto: 'integer_digits_input'},
-            {type:'dec_select_type'},
+            {type:'dec_select_type', colour:'200'},
             {type:'bin_select_type'},
             {type:'oct_select_type'},
             {type:'hex_select_type'},
@@ -480,7 +393,7 @@ Config.categories = [{
 
 Config.getBlocks = function() {
     var json = [];
-    var builder = new JsonBlockBuilder();
+    this.extensions = [];
     for (var cat of Config.categories) {
         if (Object.keys(cat).length === 0) {
             continue;
@@ -489,10 +402,15 @@ Config.getBlocks = function() {
         for (var block of blocks) {
             var bType = block.type;
             var proto = block['proto'] ? block['proto'] : cat['proto'] ? cat['proto'] : 'undone';
-            json.push(builder.createBlock(bType, proto));
-            if (proto === 'float_accept_all') {
-                console.log(builder.createBlock(bType, proto));
+            var jsonBlock = this.createBlock(bType, proto);
+            json.push(jsonBlock);
+            if (jsonBlock.extensions) {
+                this.extensions = [... new Set([...jsonBlock.extensions, ...this.extensions])];
             }
+
+//            if (proto === 'float_accept_all') {
+//                console.log(builder.createBlock(bType, proto));
+//            }
         }
     }
     return json;
@@ -559,17 +477,28 @@ Config.setupMessages = function() {
 
 Config.createSubs = function(config) {
     var xml = '';
-    console.log(config);
     for (var v of config) {
         xml += '<' + v[0] + ' name="' + v[1] + '"><' + v[2] + ' type="' + v[3] + '"></' + v[2] + '></value>'
     }
     return xml;
 }
 
+Config.setup = function() {
+    this.jbb = new JsonBlockBuilder();
+    this.setupMessages();
+    return {
+        toolbox: this.getToolbox(),
+        blocks: this.getBlocks(),
+        extensions: this.extensions
+    };
+}
+
+Config.blockIdx = {};
 
 Config.getToolbox = function() {
     // generate the toolbox XML
-    var toolbox = '<xml>';
+    toolbox = '<xml>';
+    var blockIdx = 0;
     for (var cat of Config.categories) {
         if (Object.keys(cat).length === 0) {
             toolbox += '<sep></sep>';
@@ -584,6 +513,8 @@ Config.getToolbox = function() {
             var colourKey = bType.substr(0,bType.length-5).toUpperCase()+'_HUE';
             Blockly.Msg[colourKey] = block.colour ? block.colour : colour;
             toolbox += '<block type="' + bType + '">';
+            this.blockIdx[bType] = blockIdx++;
+
             var shadow = block['shadow'] ? block['shadow'] : cat['shadow'] ? cat['shadow'] : 'none';
             if (shadow !== 'none') {
                 toolbox += this.createSubs(Config.shadows[shadow]);
@@ -593,7 +524,6 @@ Config.getToolbox = function() {
         toolbox += '</category>';
     }
     toolbox +='</xml>';
-
     return toolbox;
 };
 

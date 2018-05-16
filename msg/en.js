@@ -1,5 +1,5 @@
  var MSG = {
-    Title: "mxc-parsec",
+    title: "mxc-parsec",
     blocks: "Blocks",
     linkTooltip: "Save and link to blocks.",
     runTooltip: "Run the program defined by the blocks in the workspace.",
@@ -198,6 +198,20 @@
     blockUshortTooltip: "ushort tooltip",
     blockWordTooltip: "word tooltip",
     blockXdigitTooltip: "xdigit tooltip",
+    blockPreskipperTooltip:"without pre-skipping tooltip",
+    blockDecSelectTooltip:"decimal tooltip",
+    blockBinSelectTooltip:"binary tooltip",
+    blockHexSelectTooltip:"hexadecimal tooltip",
+    blockOctSelectTooltip:"octal tooltip",
+    blockShortSelectTooltip:"short tooltip",
+    blockUshortSelectTooltip:"ushort tooltip",
+    blockIntSelectTooltip:"int tooltip",
+    blockUintSelectTooltip:"uint tooltip",
+    blockLongSelectTooltip:"long tooltip",
+    blockULongSelectTooltip:"ulong tooltip",
+    blockLonglongSelectTooltip:"longlong tooltip",
+    blockULonglongSelectTooltip:"ulonglong tooltip",
+    blockIntegerTooltip:"number tooltip",
 
     //----------------------------------------------------
     // parsec blocks

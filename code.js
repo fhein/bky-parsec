@@ -382,10 +382,10 @@ Code.init = function() {
   };
   window.addEventListener('resize', onresize, false);
   Generator.registerGenerators();
-  Config.setupMessages();
+  var config = Config.setup();
 
-  Blockly.defineBlocksWithJsonArray(Config.getBlocks());
-  var toolboxXml = Blockly.Xml.textToDom(Config.getToolbox());
+  Blockly.defineBlocksWithJsonArray(config.blocks);
+  var toolboxXml = Blockly.Xml.textToDom(config.toolbox);
   Code.workspace = Blockly.inject('content_blocks',
       {
           grid: {
@@ -403,7 +403,18 @@ Code.init = function() {
           }
       });
   Code.workspace.configureContextMenu = customContextMenuFn;
+  Code.workspace.addChangeListener(mirrorEvent);
 
+  function mirrorEvent(event) {
+    if (event.type == Blockly.Events.UI) {
+      return;  // Don't mirror UI events.
+    }
+    var json = event.toJson();
+//    console.log(json);
+  }
+
+  // Register only the extensions actually used by blocks
+  Extensions.init(config.extensions);
   Code.loadBlocks('');
 
   if ('BlocklyStorage' in window) {
@@ -489,6 +500,8 @@ Code.initLanguage = function() {
 /**
  * Execute the user's code.
  * Just a quick and dirty eval.  Catch infinite loops.
+ *
+ * Not currently used.
  */
 Code.runJS = function() {
   Blockly.JavaScript.INFINITE_LOOP_TRAP = '  checkTimeout();\n';
