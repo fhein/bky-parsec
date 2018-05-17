@@ -1,7 +1,19 @@
 
 var Extensions = {};
 
+Extensions.pgAssoc = {};
+
 Extensions.extensions ={
+
+    'register_generator': function() {
+        var obj = Extensions.pgAssoc[this.type];
+        this.parser = obj.parser;
+        this.generator = obj.generator;
+        Blockly.PHP[this.type] = Generator.generators[this.generator];
+//        console.log("Code generator for " + this.type + ": " + this.generator);
+//        console.log("Parser for " + this.type + ": " + this.parser);
+    },
+
     'use_parent_tooltip': function() {
         var that = this;
         this.setTooltip(function() {
@@ -111,3 +123,7 @@ Extensions.init = function(extensionList) {
        Blockly.Extensions.register(extension, code);
     }
 };
+
+Extensions.addParserGeneratorAssoc = function(bType, assoc) {
+    this.pgAssoc[bType] = assoc;
+}

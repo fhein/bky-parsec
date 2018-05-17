@@ -339,6 +339,7 @@ Code.checkAllGeneratorFunctionsDefined = function(generator) {
     if (!generator[blockType]) {
       if (missingBlockGenerators.indexOf(blockType) === -1) {
         missingBlockGenerators.push(blockType);
+        generator[type] = Generator.generators["undone_generator"];
       }
     }
   }
@@ -347,9 +348,9 @@ Code.checkAllGeneratorFunctionsDefined = function(generator) {
   if (!valid) {
     var msg = 'The generator code for the following blocks not specified for '
         + generator.name_ + ':\n - ' + missingBlockGenerators.join('\n - ');
-    Blockly.alert(msg);  // Assuming synchronous. No callback.
+    console.log(msg);
   }
-  return valid;
+  return true;
 };
 
 /**
@@ -381,7 +382,7 @@ Code.init = function() {
     }
   };
   window.addEventListener('resize', onresize, false);
-  Generator.registerGenerators();
+//  Generator.registerGenerators();
   var config = Config.setup();
 
   Blockly.defineBlocksWithJsonArray(config.blocks);

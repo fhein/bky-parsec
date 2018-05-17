@@ -23,18 +23,22 @@ JsonBlockBuilder.prototype.get = function() {
         }
         this.block['message'+i] = replace;
     }
+    if (! this.block.extensions) {
+        this.block.extensions = [];
+    }
+    this.block.extensions = [... new Set([...this.block.extensions, ...['onchange_stack', 'register_generator']])];
+
     return this.block;
 }
 
-JsonBlockBuilder.prototype.create = function(bType) {
-    this.ubType = bType.toUpperCase().substr(0,bType.length-5);
-    prefix = '%{BKY_' + this.ubType + '_';
+JsonBlockBuilder.prototype.create = function(setup) {
+    this.ubName = setup.bName.toUpperCase();
+    prefix = '%{BKY_' + this.ubName + '_';
     helpUrl = prefix + 'HELPURL}';
     tooltip = prefix + 'TOOLTIP}';
     colour =  prefix + 'HUE}';
     this.prefix = prefix;
-
-    this.block = {type:bType, 'helpUrl':helpUrl, 'tooltip':tooltip, 'colour':colour};
+    this.block = {type:setup.bType, 'helpUrl':helpUrl, 'tooltip':tooltip, 'colour':colour};
     return this;
 }
 
