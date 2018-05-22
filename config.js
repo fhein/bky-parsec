@@ -729,7 +729,8 @@ Config.createBlock = function(setup) {
             ['hello', 'hello'],
             ['world', 'world']
           ]
-        });
+        })
+        .setExtensions(['onchange_name_handler']);
       break;
 
     case 'rule':
@@ -744,19 +745,33 @@ Config.createBlock = function(setup) {
         .addInput(1, {
           type: 'input_statement',
           check: parser
-        }, '%%');
+        }, '%%')
+        .setExtensions(['onchange_name_handler']);
       break;
 
     case 'reference':
+
+      this.jbb
+        .addParserConnections()
+        .addInput(0, {type:'input_dummy'})
+        //.addInput(1, {type:'field_dropdown', options:[['hello','hello'], ['world', 'world']]})
+        .addInput(1, {type:'input_dummy'})
+        .setExtensions(['reference_dropdown']);
+      break;
+
       this.jbb
         .addConnections('reference')
-        .addInput(0, {
-          type: 'field_dropdown',
-          options: [
-            ['hello', 'hello'],
-            ['world', 'world']
-          ]
-        })
+        .addInput(0, {type:'input_dummy'})
+        .addInput(1, {type:'input_dummy'})
+
+//        .addInput(0, {
+//          type: 'field_dropdown',
+//          options: [
+//            ['hello', 'hello'],
+//            ['world', 'world']
+//          ]
+//        })
+       .setExtensions(['reference_dropdown']);
       break;
 
     default:

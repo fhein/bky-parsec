@@ -9,6 +9,7 @@
 var mxcParsec = (function($, undefined) {
 
   'use strict';
+  var parserNames = [];
 
   var customContextMenuFn = function(options) {
     var option = {
@@ -525,6 +526,16 @@ var mxcParsec = (function($, undefined) {
   // Load Blockly's language strings.
   document.write('<script src="../../msg/js/' + LANG + '.js"></script>\n');
   window.addEventListener('load', init);
+function dynamicReferenceOptions() {
+	var options = [];
+	for(var option of parserNames){
+		options.push([option,option]);
+	}
+	if (parserNames.length ==0){
+		options =[['please create a parser first','error']];
+	}
+	  return options;
+}
 
   return $;
 })(mxcParsec = mxcParsec || {});
