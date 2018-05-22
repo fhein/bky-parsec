@@ -7,7 +7,7 @@ Extensions.extensions ={
 
     'register_generator': function() {
         var obj = Extensions.pgAssoc[this.type];
-        this.parser = obj.parser;
+        this.data = obj.data;
         this.generator = obj.generator;
         Blockly.PHP[this.type] = Generator.generators.php[this.generator];
 //        console.log("Code generator for " + this.type + ": " + this.generator);
