@@ -818,31 +818,31 @@ Config.categories = [
             "type": "float_all_type",
             "proto": "float_all",
             "shadow": "none",
-            "generator": "undone_generator",
+            "generator": "integer_all_generator",
             "name": "float_all"
           },
           {
             "type": "float_input_type",
             "proto": "float_input",
             "shadow": "none",
-            "generator": "undone_generator",
+            "generator": "integer_input_generator",
             "name": "float_input"
           },
           {
             "type": "float_type",
-            "generator": "undone_generator",
+            "generator": "byte_generator",
             "data": "float",
             "name": "float"
           },
           {
             "type": "double_type",
-            "generator": "undone_generator",
+            "generator": "byte_generator",
             "data": "double",
             "name": "double"
           },
           {
             "type": "long_double_type",
-            "generator": "undone_generator",
+            "generator": "byte_generator",
             "data": "long_double",
             "name": "long_double"
           }
