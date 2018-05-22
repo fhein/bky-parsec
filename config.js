@@ -6,19 +6,49 @@ Config.createBlock = function(setup) {
     switch(proto) {
         case 'no_arguments':
             this.jbb
+                .addParserConnections()
+                .addInput(0, {type:'input_dummy'});
+            break;
+
+        case 'single_parser':
+            this.jbb
+                .addParserConnections()
                 .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'input_statement',check:'parser'}, '%%');
+            break;
+
+        case 'dual_parser':
+            this.jbb
+                .addParserConnections()
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'input_statement',check:'parser'}, '%%')
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'input_statement',check:'parser'}, '%%');
+            break;
+
+        case 'single_text_field':
+            // @todo: Handle different default values
+            this.jbb
+                .addParserConnections()
+                .addInput(0, {type:'field_input', text:'a'})
+            break;
+
+        case 'dual_text_field':
+            // @todo: Handle different default values
+            this.jbb
+                .addParserConnections()
+                .addInput(0, {type:'field_input', text:'a'})
+                .addInput(0, {type:'field_input',text:'9'})
+            break;
+
+        case 'char_range':
+            this.jbb
+                .addInput(0, {type:'field_input',text:'0'})
+                .addInput(0, {type:'field_input',text:'9'})
                 .addParserConnections();
             break;
 
-        case 'char':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_value', check:'char_negate'}, '%% %message%')
-                .addInput(0, {type:'input_value', check:['char_input', 'char_all']}, '%%')
-                .inputsInline(true);
-            break;
-
-        case 'integer_accept_all':
+         case 'integer_accept_all':
             this.jbb
                 .addParserConnections()
                 .addInput(0, {type:'input_value',check:'integer_select'}, '%% %message%')
@@ -35,12 +65,6 @@ Config.createBlock = function(setup) {
                 .addParserConnections()
                 .addInput(0, {type:'input_value',check:[type + '_input', type + '_all']})
                 .inputsInline(true);
-            break;
-
-        case 'char_input':
-            this.jbb
-                .addInput(0, {type:'field_input',text:'a',check:'string'}, '%%')
-                .setOutput('char_input');
             break;
 
         case 'no_skip':
@@ -60,24 +84,6 @@ Config.createBlock = function(setup) {
                 .setOutput(proto);
             break;
 
-        case 'char_set_input':
-            this.jbb
-                .addInput(0, {type:'field_input',text:'A-Z0-9'})
-                .setOutput('char_input');
-            break;
-
-        case 'char_range_input':
-            this.jbb
-                .addInput(0, {type:'field_input',text:'0'})
-                .addInput(0, {type:'field_input',text:'9'})
-                .setOutput('char_input');
-            break;
-
-        case 'char_class_input':
-            this.jbb
-                .addInput(0, {type:'input_dummy'})
-                .setOutput('char_input');
-            break;
 
         // note: code generators are different for the next both
         case 'integer_digits_input':
@@ -153,19 +159,6 @@ Config.createBlock = function(setup) {
                 .inputsInline(true);
             break;
 
-        case 'dual_parser':
-            this.jbb
-                .addInput(0, {type:'input_dummy'})
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%')
-
-                // intentional fall through
-        case 'single_parser':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_dummy'})
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%');
-            break;
-
         case 'integer_field':
             this.jbb
                 .addParserConnections()
@@ -235,10 +228,10 @@ Config.createBlock = function(setup) {
 Config.shadows = {
         'allNullShadow':     [['value','PARAM1','shadow','integer_all_type']],
 
-        'negateShadow':      [['value', 'PARAM1', 'shadow', 'char_negate_true_type'],
-                              ['value', 'PARAM1', 'block', 'char_negate_false_type'],
-                              ['value', 'PARAM2', 'shadow', 'char_set_input_type'],
-                              ['value', 'PARAM2', 'block', 'char_all_type']],
+//        'negateShadow':      [['value', 'PARAM1', 'shadow', 'char_negate_true_type'],
+//                              ['value', 'PARAM1', 'block', 'char_negate_false_type'],
+//                              ['value', 'PARAM2', 'shadow', 'char_set_input_type'],
+//                              ['value', 'PARAM2', 'block', 'char_all_type']],
 
         'byteShadow':        [['value', 'PARAM1', 'shadow', 'binary_input_type'],
                               ['value', 'PARAM1', 'block', 'binary_all_type']],
@@ -251,7 +244,7 @@ Config.shadows = {
                               ['value', 'PARAM2', 'shadow', 'native_endian_type'],
                               ['value', 'PARAM2', 'block', 'little_endian_type']],
 
-        'integerShadow':     [['value', 'PARAM1', 'block', 'dec_select_type'],
+        'integerShadow':     [['value', 'PARAM1', 'block', 'int_select_type'],
                               ['value', 'PARAM2', 'shadow', 'integer_range_input_type'],
                               ['value', 'PARAM2', 'block', 'integer_all_type']],
 
@@ -294,47 +287,47 @@ Config.categories = [
       {
         "ref": "catDirective",
         "proto": "single_parser",
-        "generator": "single_parser_generator",
+        "generator": "single_parser",
         "blocks": [
           {
             "type": "matches_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "matches",
             "name": "matches"
           },
           {
             "type": "omit_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "omit",
             "name": "omit"
           },
           {
             "type": "hold_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "hold",
             "name": "hold"
           },
           {
             "type": "as_string_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "as_string",
             "name": "as_string"
           },
           {
             "type": "no_case_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "no_case",
             "name": "no_case"
           },
           {
             "type": "expect_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "expect",
             "name": "expect"
           },
           {
             "type": "raw_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "raw",
             "name": "raw"
           },
@@ -378,23 +371,23 @@ Config.categories = [
       {
         "ref": "catLoops",
         "proto": "single_parser",
-        "generator": "single_parser_generator",
+        "generator": "single_parser",
         "blocks": [
           {
             "type": "kleene_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "kleene",
             "name": "kleene"
           },
           {
             "type": "plus_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "plus",
             "name": "plus"
           },
           {
             "type": "optional_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "optional",
             "name": "optional"
           },
@@ -441,17 +434,17 @@ Config.categories = [
       {
         "ref": "catPredicate",
         "proto": "single_parser",
-        "generator": "single_parser_generator",
+        "generator": "single_parser",
         "blocks": [
           {
             "type": "not_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "not",
             "name": "not"
           },
           {
             "type": "and_type",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "and",
             "name": "and"
           }
@@ -510,14 +503,14 @@ Config.categories = [
           {
             "type": "string_type",
             "proto": "string",
-            "generator": "string_generator",
+            "generator": "single_text_field",
             "data": "string",
             "name": "string"
           },
           {
             "type": "lit_type",
             "proto": "string",
-            "generator": "string_generator",
+            "generator": "single_text_field",
             "data": "lit",
             "name": "lit"
           },
@@ -536,134 +529,126 @@ Config.categories = [
           {
             "type": "eol_type",
             "proto": "no_arguments",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "eol",
             "name": "eol"
           },
           {
             "type": "eoi_type",
             "proto": "no_arguments",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "eoi",
             "name": "eoi"
           },
           {
-            "type": "char_negate_false_type",
-            "proto": "char_negate",
-            "generator": "false_generator",
-            "name": "char_negate_false"
-          },
-          {
-            "type": "char_negate_true_type",
-            "proto": "char_negate",
-            "generator": "true_generator",
-            "name": "char_negate_true"
-          },
-          {
             "type": "char_type",
-            "proto": "char",
-            "shadow": "negateShadow",
-            "generator": "char_generator",
+            "proto": "single_text_field",
+            "generator": "single_text_field",
             "data": "char",
             "name": "char"
           },
           {
             "type": "char_all_type",
-            "proto": "char_all",
-            "generator": "char_all_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "char",
             "name": "char_all"
           },
           {
-            "type": "char_input_type",
-            "proto": "char_input",
-            "generator": "char_set_input_generator",
-            "data": "char",
-            "name": "char_input"
-          },
-          {
-            "type": "char_range_input_type",
-            "proto": "char_range_input",
-            "generator": "char_range_input_generator",
+            "type": "char_range_type",
+            "proto": "char_range",
+            "generator": "dual_text_field",
             "data": "char_range",
-            "name": "char_range_input"
+            "name": "char_range"
           },
           {
-            "type": "char_set_input_type",
-            "proto": "char_set_input",
-            "generator": "char_set_input_generator",
+            "type": "char_set_type",
+            "proto": "single_text_field",
+            "generator": "single_text_field",
             "data": "char_set",
-            "name": "char_set_input"
-          },
-          {
-            "type": "digit_type",
-            "generator": "char_class_input_generator",
-            "data": "digit",
-            "name": "digit"
-          },
-          {
-            "type": "xdigit_type",
-            "generator": "char_class_input_generator",
-            "data": "xdigit",
-            "name": "xdigit"
+            "name": "char_set"
           },
           {
             "type": "alpha_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "alpha",
             "name": "alpha"
           },
           {
+              "type": "digit_type",
+              "proto": "no_arguments",
+              "generator": "no_argument",
+              "data": "digit",
+              "name": "digit"
+          },
+          {
             "type": "alnum_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "alnum",
             "name": "alnum"
           },
           {
+              "type": "xdigit_type",
+              "proto": "no_arguments",
+              "generator": "no_argument",
+              "data": "xdigit",
+              "name": "xdigit"
+          },
+          {
             "type": "lower_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "lower",
             "name": "lower"
           },
           {
             "type": "graph_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "graph",
             "name": "graph"
           },
           {
             "type": "upper_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "upper",
             "name": "upper"
           },
           {
             "type": "punct_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "punct",
             "name": "punct"
           },
           {
             "type": "print_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "print",
             "name": "print"
           },
           {
             "type": "cntrl_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "cntrl",
             "name": "cntrl"
           },
           {
             "type": "space_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "space",
             "name": "space"
           },
           {
             "type": "blank_type",
-            "generator": "char_class_input_generator",
+            "proto": "no_arguments",
+            "generator": "no_argument",
             "data": "blank",
             "name": "blank"
           }
@@ -682,14 +667,14 @@ Config.categories = [
           },
           {
             "type": "true_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "proto":"no_arguments",
             "data": "true",
             "name": "true"
           },
           {
             "type": "false_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "proto":"no_arguments",
             "data": "false",
             "name": "false"
@@ -735,75 +720,68 @@ Config.categories = [
             "name": "integer_digits_input"
           },
           {
-            "type": "dec_select_type",
-            "colour": "200",
-            "generator": "no_arguments_generator",
-            "data": "int",
-            "name": "dec_select"
-          },
-          {
             "type": "bin_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "bin",
             "name": "bin_select"
           },
           {
             "type": "oct_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "oct",
             "name": "oct_select"
           },
           {
             "type": "hex_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "hex",
             "name": "hex_select"
           },
           {
             "type": "ushort_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "ushort",
             "name": "ushort_select"
           },
           {
             "type": "uint_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "uint",
             "name": "uint_select"
           },
           {
             "type": "ulong_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "ulong",
             "name": "ulong_select"
           },
           {
             "type": "ulonglong_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "ulonglong",
             "name": "ulonglong_select"
           },
           {
             "type": "short_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "short",
             "name": "short_select"
           },
           {
             "type": "int_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "int",
             "name": "int_select"
           },
           {
             "type": "long_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "long",
             "name": "long_select"
           },
           {
             "type": "longlong_select_type",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "longlong",
             "name": "longlong_select"
           }
@@ -939,7 +917,7 @@ Config.categories = [
           {
             "type": "eps_type",
             "proto": "no_arguments",
-            "generator": "no_arguments_generator",
+            "generator": "no_argument",
             "data": "eps",
             "name": "eps"
           },
@@ -953,7 +931,7 @@ Config.categories = [
           {
             "type": "lazy_type",
             "proto": "single_parser",
-            "generator": "single_parser_generator",
+            "generator": "single_parser",
             "data": "lazy",
             "name": "lazy"
           },
