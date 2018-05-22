@@ -326,4 +326,12 @@
     blockLonglongSelectMsg1:"longlong",
     blockULonglongSelectMsg1:"ulonglong",
     blockIntegerMsg1:"number",
+    blockRepeatForeverMsg1:"forever",
+    blockRepeatExactlyMsg1:"times",
+    blockRepeatMinMsg1:"at least",
+    blockRepeatMinMsg2:"times",
+    blockRepeatMinMaxMsg1:"at least",
+    blockRepeatMinMaxMsg2:"times",
+    blockRepeatMinMaxMsg3:"but no more than",
+    blockRepeatMinMaxMsg4:"times",
 };

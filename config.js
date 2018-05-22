@@ -96,6 +96,46 @@ Config.createBlock = function(setup) {
                 .inputsInline(true);
             break;
 
+        case 'repeat':
+            this.jbb
+                .addParserConnections()
+                .addInput(0, {type:'input_value', check:'repeat_input'})
+                .addInput(0, {type:"input_statement", check:"parser"},'%%')
+                .inputsInline(true);
+            break;
+
+        case 'repeat_forever_input':
+            this.jbb
+                .addInput(0, {type:"input_dummy"})
+                .setOutput('repeat_input')
+                .inputsInline(true);
+            break;
+
+        case 'repeat_exactly_input':
+            this.jbb
+                .addInput(0, {type:"field_number", value:2},'%% %message%')
+                .setOutput('repeat_input')
+                .inputsInline(true);
+            break;
+
+        case 'repeat_min_input':
+            this.jbb
+                .addInput(0, {type:"input_dummy"},'%% %message%')
+                .addInput(1, {type:"field_number", value:2},'%% %message%')
+                .setOutput('repeat_input')
+                .inputsInline(true);
+            break;
+
+        case 'repeat_min_max_input':
+            this.jbb
+                .addInput(0, {type:"input_dummy"},'%% %message%')
+                .addInput(1, {type:"field_number", value:2},'%% %message%')
+                .addInput(2, {type:"input_dummy"},'%% %message%')
+                .addInput(3, {type:"field_number", value:2},'%% %message%')
+                .setOutput('repeat_input')
+                .inputsInline(true);
+            break;
+
         case 'float':
         case 'integer':
             this.jbb
@@ -301,9 +341,37 @@ Config.categories = [
             "name": "raw"
           },
           {
+              "type": "repeat_forever_type",
+              "proto": "repeat_forever_input",
+              "generator": "repeat_forever_generator",
+              "parser": "repeat",
+              "name": "repeat_forever"
+          },
+          {
+              "type": "repeat_exactly_type",
+              "proto": "repeat_exactly_input",
+              "generator": "repeat_exactly_generator",
+              "parser": "repeat",
+              "name": "repeat_exactly"
+          },
+          {
+              "type": "repeat_min_type",
+              "proto": "repeat_min_input",
+              "generator": "repeat_min_generator",
+              "parser": "repeat",
+              "name": "repeat_min"
+          },
+          {
+              "type": "repeat_min_max_type",
+              "proto": "repeat_min_max_input",
+              "generator": "repeat_min_max_generator",
+              "parser": "repeat",
+              "name": "repeat_min_max"
+          },
+          {
             "type": "repeat_type",
-            "proto": "undone",
-            "generator": "undone_generator",
+            "proto": "repeat",
+            "generator": "repeat_generator",
             "parser": "repeat",
             "name": "repeat"
           }
@@ -1049,6 +1117,9 @@ Config.getToolbox = function() {
             var data = {
                 parser: block['parser'] ? block['parser'] : cat['parser'] ? cat['parser'] : '',
                 generator: block['generator'] ? block['generator'] : cat['generator'] ? cat['generator'] : 'undone_generator',
+            }
+            if (data.generator === 'undone_generator') {
+                console.log(bType);
             }
             Extensions.addParserGeneratorAssoc(bType,data);
             this.blockIdx[bType] = blockIdx++;

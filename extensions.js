@@ -9,7 +9,7 @@ Extensions.extensions ={
         var obj = Extensions.pgAssoc[this.type];
         this.parser = obj.parser;
         this.generator = obj.generator;
-        Blockly.PHP[this.type] = Generator.generators[this.generator];
+        Blockly.PHP[this.type] = Generator.generators.php[this.generator];
 //        console.log("Code generator for " + this.type + ": " + this.generator);
 //        console.log("Parser for " + this.type + ": " + this.parser);
     },
