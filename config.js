@@ -33,6 +33,21 @@ Config.createBlock = function(setup) {
                 .addInput(0, {type:'field_input', text:'a'})
             break;
 
+        case 'single_number_field':
+            // @todo: Handle different default values
+            this.jbb
+                .addParserConnections()
+                .addInput(0, {type:'field_number', value:0})
+            break;
+
+        case 'single_integer_value':
+            // @todo: Handle different default values
+            this.jbb
+                .addParserConnections()
+                .addInput(0, {type:'input_value',check:['integer_input', 'integer_all']})
+//                .inputsInline(true);
+            break;
+
         case 'dual_text_field':
             // @todo: Handle different default values
             this.jbb
@@ -48,7 +63,27 @@ Config.createBlock = function(setup) {
                 .addParserConnections();
             break;
 
-         case 'integer_accept_all':
+        case 'char_class':
+            this.jbb
+                .addInput(0, {type:'field_dropdown',
+                    options: [
+                        ['alpha', 'alpha'],
+                        ['digit', 'digit'],
+                        ['alnum', 'alnum'],
+                        ['xdigit', 'xdigit'],
+                        ['punct', 'punct'],
+                        ['space', 'space'],
+                        ['blank', 'blank'],
+                        ['cntrl', 'cntrl'],
+                        ['lower', 'lower'],
+                        ['upper', 'upper'],
+                        ['graph', 'graph'],
+                        ['print', 'print'],
+                ]})
+                .addParserConnections();
+            break;
+
+        case 'integer_accept_all':
             this.jbb
                 .addParserConnections()
                 .addInput(0, {type:'input_value',check:'integer_select'}, '%% %message%')
@@ -57,20 +92,16 @@ Config.createBlock = function(setup) {
                 .setExtensions(['onchange_stack','onchange_warning_example', 'onchange_restore_default_colour']);
             break;
 
-
         case 'binary_accept_all':
-        case 'float_accept_all':
             var type = proto.substr(0,proto.indexOf('_'));
             this.jbb
                 .addParserConnections()
                 .addInput(0, {type:'input_value',check:[type + '_input', type + '_all']})
-                .inputsInline(true);
             break;
 
         case 'no_skip':
             this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_value', check:['preskipper', 'preskipper_all']})
                 .addInput(0, {type:'input_statement',check:'parser'}, '%%')
                 .inputsInline(true);
             break;
@@ -107,14 +138,6 @@ Config.createBlock = function(setup) {
                 .addParserConnections()
                 .addInput(0, {type:'input_value', check:'repeat_input'})
                 .addInput(0, {type:"input_statement", check:"parser"},'%%')
-                .inputsInline(true);
-            break;
-
-        case 'repeat_forever_input':
-            this.jbb
-                .addInput(0, {type:"input_dummy"})
-                .setOutput('repeat_input')
-                .inputsInline(true);
             break;
 
         case 'repeat_exactly_input':
@@ -154,9 +177,13 @@ Config.createBlock = function(setup) {
         case 'binary':
             this.jbb
                 .addParserConnections()
-                .addInput(0,{type:'input_value', check:['binary_input', 'binary_all']})
-                .addInput(0,{type:'input_value', check:'endianness'}, '%%')
-                .inputsInline(true);
+                .addInput(0, {type:'field_dropdown',
+                    options: [
+                        ['(assume little endian byte order)', 'little_'],
+                        ['(assume native endian byte order)', ''],
+                        ['(assume big endian byte order)', 'big_'],
+                ]}, '%message% %%')
+                .addInput(0,{type:'input_value', check:['binary_input', 'binary_all']}, '%%')
             break;
 
         case 'integer_field':
@@ -196,9 +223,9 @@ Config.createBlock = function(setup) {
                 .addInput(1, {type:'field_dropdown', options:[['hello','hello'], ['world', 'world']]})
             break;
 
-        case 'binary_all':
+//        case 'binary_all':
         case 'char_all':
-        case 'integer_all':
+//        case 'integer_all':
         case 'float_all':
         case 'preskipper_all':
             this.jbb
@@ -228,31 +255,21 @@ Config.createBlock = function(setup) {
 Config.shadows = {
         'allNullShadow':     [['value','PARAM1','shadow','integer_all_type']],
 
-//        'negateShadow':      [['value', 'PARAM1', 'shadow', 'char_negate_true_type'],
-//                              ['value', 'PARAM1', 'block', 'char_negate_false_type'],
-//                              ['value', 'PARAM2', 'shadow', 'char_set_input_type'],
-//                              ['value', 'PARAM2', 'block', 'char_all_type']],
-
         'byteShadow':        [['value', 'PARAM1', 'shadow', 'binary_input_type'],
                               ['value', 'PARAM1', 'block', 'binary_all_type']],
 
         'floatShadow':       [['value', 'PARAM1', 'shadow', 'float_input_type'],
                               ['value', 'PARAM1', 'block', 'float_all_type']],
 
-        'binaryShadow':      [['value', 'PARAM1', 'shadow', 'binary_input_type'],
-                              ['value', 'PARAM1', 'block', 'binary_all_type'],
-                              ['value', 'PARAM2', 'shadow', 'native_endian_type'],
-                              ['value', 'PARAM2', 'block', 'little_endian_type']],
+        'binaryShadow':      [['value', 'PARAM2', 'block', 'binary_all_type']],
 
-        'integerShadow':     [['value', 'PARAM1', 'block', 'int_select_type'],
-                              ['value', 'PARAM2', 'shadow', 'integer_range_input_type'],
-                              ['value', 'PARAM2', 'block', 'integer_all_type']],
+        'integerShadow':     [['value', 'PARAM1', 'block', 'integer_all_type']],
 
         'nonDecShadow':      [['value', 'PARAM1', 'shadow', 'nd_input_type'],
                               ['value', 'PARAM1', 'block', 'nd_all_type']],
 
-        'preSkipperShadow':  [['value', 'PARAM1', 'shadow', 'preskipper_type'],
-                              ['value', 'PARAM1', 'block', 'preskipper_all_type']],
+//        'preSkipperShadow':  [['value', 'PARAM1', 'shadow', 'preskipper_type'],
+//                              ['value', 'PARAM1', 'block', 'preskipper_all_type']],
 }
 
 Config.categories = [
@@ -289,54 +306,101 @@ Config.categories = [
         "proto": "single_parser",
         "generator": "single_parser",
         "blocks": [
+            {
+                "type": "expect_type",
+                "generator": "single_parser",
+                "data": "expect",
+                "name": "expect"
+          },
+          {
+              "type": "raw_type",
+              "generator": "single_parser",
+              "data": "raw",
+              "name": "raw"
+          },
+          {
+              "type": "omit_type",
+              "generator": "single_parser",
+              "data": "omit",
+              "name": "omit"
+          },
+          {
+              "type": "no_case_type",
+              "generator": "single_parser",
+              "data": "no_case",
+              "name": "no_case"
+          },
           {
             "type": "matches_type",
             "generator": "single_parser",
             "data": "matches",
             "name": "matches"
           },
+//          {
+//              "type": "hold_type",
+//              "generator": "single_parser",
+//              "data": "hold",
+//              "name": "hold"
+//          },
+        ]
+      },
+      {},
+      {
+          "ref": "catCast",
+          "proto": "single_parser",
+          "generator": "single_parser",
+          "blocks": [
+              {
+                  "type": "as_string_type",
+                  "generator": "single_parser",
+                  "data": "as_string",
+                  "name": "as_string"
+              },
+          ]
+      },
+      {},
+      {
+        "ref": "catLoops",
+        "proto": "single_parser",
+        "generator": "single_parser",
+        "blocks": [
           {
-            "type": "omit_type",
-            "generator": "single_parser",
-            "data": "omit",
-            "name": "omit"
+              "type": "sequence_type",
+              "generator": "undone_generator",
+              "data": "sequence",
+              "name": "sequence"
           },
           {
-            "type": "hold_type",
+            "type": "kleene_star_type",
             "generator": "single_parser",
-            "data": "hold",
-            "name": "hold"
+            "data": "kleene",
+            "name": "kleene_star"
           },
           {
-            "type": "as_string_type",
+            "type": "kleene_plus_type",
             "generator": "single_parser",
-            "data": "as_string",
-            "name": "as_string"
+            "data": "plus",
+            "name": "kleene_plus"
           },
           {
-            "type": "no_case_type",
+            "type": "optional_type",
             "generator": "single_parser",
-            "data": "no_case",
-            "name": "no_case"
+            "data": "optional",
+            "name": "optional"
           },
           {
-            "type": "expect_type",
-            "generator": "single_parser",
-            "data": "expect",
-            "name": "expect"
+            "type": "list_type",
+            "proto": "dual_parser",
+            "generator": "dual_parser_generator",
+            "data": "list",
+            "name": "list"
           },
           {
-            "type": "raw_type",
-            "generator": "single_parser",
-            "data": "raw",
-            "name": "raw"
-          },
-          {
-              "type": "repeat_forever_type",
-              "proto": "repeat_forever_input",
-              "generator": "repeat_forever_generator",
-              "data": "repeat",
-              "name": "repeat_forever"
+            "type": "repeat_type",
+            "proto": "repeat",
+            "generator": "repeat_generator",
+            "data": "repeat",
+            "name": "repeat"
           },
           {
               "type": "repeat_exactly_type",
@@ -359,76 +423,6 @@ Config.categories = [
               "data": "repeat",
               "name": "repeat_min_max"
           },
-          {
-            "type": "repeat_type",
-            "proto": "repeat",
-            "generator": "repeat_generator",
-            "data": "repeat",
-            "name": "repeat"
-          }
-        ]
-      },
-      {
-        "ref": "catLoops",
-        "proto": "single_parser",
-        "generator": "single_parser",
-        "blocks": [
-          {
-            "type": "kleene_type",
-            "generator": "single_parser",
-            "data": "kleene",
-            "name": "kleene"
-          },
-          {
-            "type": "plus_type",
-            "generator": "single_parser",
-            "data": "plus",
-            "name": "plus"
-          },
-          {
-            "type": "optional_type",
-            "generator": "single_parser",
-            "data": "optional",
-            "name": "optional"
-          },
-          {
-            "type": "alternative_type",
-            "generator": "dual_parser_generator",
-            "data": "alternative",
-            "name": "alternative"
-          },
-          {
-            "type": "sequence_type",
-            "generator": "undone_generator",
-            "data": "sequence",
-            "name": "sequence"
-          },
-          {
-            "type": "permutation_type",
-            "generator": "undone_generator",
-            "data": "permutation",
-            "name": "permutation"
-          },
-          {
-            "type": "sequential_or_type",
-            "generator": "undone_generator",
-            "data": "sequential_or",
-            "name": "sequential_or"
-          },
-          {
-            "type": "difference_type",
-            "proto": "dual_parser",
-            "generator": "undone_generator",
-            "data": "difference",
-            "name": "difference"
-          },
-          {
-            "type": "list_type",
-            "proto": "dual_parser",
-            "generator": "dual_parser_generator",
-            "data": "list",
-            "name": "list"
-          }
         ]
       },
       {
@@ -437,16 +431,41 @@ Config.categories = [
         "generator": "single_parser",
         "blocks": [
           {
-            "type": "not_type",
-            "generator": "single_parser",
-            "data": "not",
-            "name": "not"
+            "type": "alternative_type",
+            "generator": "dual_parser_generator",
+            "data": "alternative",
+            "name": "alternative"
           },
           {
-            "type": "and_type",
-            "generator": "single_parser",
-            "data": "and",
-            "name": "and"
+              "type": "difference_type",
+              "proto": "dual_parser",
+              "generator": "undone_generator",
+              "data": "difference",
+              "name": "difference"
+          },
+          {
+              "type": "permutation_type",
+              "generator": "undone_generator",
+              "data": "permutation",
+              "name": "permutation"
+          },
+          {
+              "type": "sequential_or_type",
+              "generator": "undone_generator",
+              "data": "sequential_or",
+              "name": "sequential_or"
+          },
+          {
+              "type": "not_type",
+              "generator": "single_parser",
+              "data": "not",
+              "name": "not"
+          },
+          {
+              "type": "and_type",
+              "generator": "single_parser",
+              "data": "and",
+              "name": "and"
           }
         ]
       },
@@ -456,20 +475,16 @@ Config.categories = [
         "generator": "undone_generator",
         "blocks": [
           {
-            "type": "preskipper_all_type",
-            "proto": "preskipper_all",
-            "shadow": "none",
-            "data": "lexeme",
-            "generator": "parser_select_generator",
-            "name": "preskipper_all"
+              "type": "lexeme_type",
+              "generator": "no_skip_generator",
+              "data": "lexeme",
+              "name": "lexeme"
           },
           {
-            "type": "preskipper_type",
-            "proto": "preskipper",
-            "shadow": "none",
-            "data": "no_skip",
-            "generator": "parser_select_generator",
-            "name": "preskipper"
+              "type": "no_skip_type",
+              "generator": "no_skip_generator",
+              "data": "no_skip",
+              "name": "no_skip"
           },
           {
             "type": "skipper_type",
@@ -485,14 +500,6 @@ Config.categories = [
             "data": "skip",
             "name": "skip"
           },
-          {
-            "type": "no_skip_type",
-            "proto": "no_skip",
-            "shadow": "preSkipperShadow",
-            "generator": "no_skip_generator",
-            "data": "no_skip",
-            "name": "no_skip"
-          }
         ]
       },
       {},
@@ -527,18 +534,18 @@ Config.categories = [
         "proto": "char_class_input",
         "blocks": [
           {
-            "type": "eol_type",
+            "type": "char_all_type",
             "proto": "no_arguments",
             "generator": "no_argument",
-            "data": "eol",
-            "name": "eol"
+            "data": "char",
+            "name": "char_all"
           },
           {
-            "type": "eoi_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "eoi",
-            "name": "eoi"
+              "type": "negate_type",
+              "proto": "single_parser",
+              "generator": "single_parser",
+              "data": "~",
+              "name": "negate"
           },
           {
             "type": "char_type",
@@ -546,13 +553,6 @@ Config.categories = [
             "generator": "single_text_field",
             "data": "char",
             "name": "char"
-          },
-          {
-            "type": "char_all_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "char",
-            "name": "char_all"
           },
           {
             "type": "char_range_type",
@@ -569,89 +569,96 @@ Config.categories = [
             "name": "char_set"
           },
           {
-            "type": "alpha_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "alpha",
-            "name": "alpha"
+              "type": "char_class_type",
+              "proto": "char_class",
+              "generator": "single_text_field",
+              "data": "char_class",
+              "name": "char_class"
           },
-          {
-              "type": "digit_type",
-              "proto": "no_arguments",
-              "generator": "no_argument",
-              "data": "digit",
-              "name": "digit"
-          },
-          {
-            "type": "alnum_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "alnum",
-            "name": "alnum"
-          },
-          {
-              "type": "xdigit_type",
-              "proto": "no_arguments",
-              "generator": "no_argument",
-              "data": "xdigit",
-              "name": "xdigit"
-          },
-          {
-            "type": "lower_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "lower",
-            "name": "lower"
-          },
-          {
-            "type": "graph_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "graph",
-            "name": "graph"
-          },
-          {
-            "type": "upper_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "upper",
-            "name": "upper"
-          },
-          {
-            "type": "punct_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "punct",
-            "name": "punct"
-          },
-          {
-            "type": "print_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "print",
-            "name": "print"
-          },
-          {
-            "type": "cntrl_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "cntrl",
-            "name": "cntrl"
-          },
-          {
-            "type": "space_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "space",
-            "name": "space"
-          },
-          {
-            "type": "blank_type",
-            "proto": "no_arguments",
-            "generator": "no_argument",
-            "data": "blank",
-            "name": "blank"
-          }
+//          {
+//            "type": "alpha_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "alpha",
+//            "name": "alpha"
+//          },
+//          {
+//              "type": "digit_type",
+//              "proto": "no_arguments",
+//              "generator": "no_argument",
+//              "data": "digit",
+//              "name": "digit"
+//          },
+//          {
+//            "type": "alnum_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "alnum",
+//            "name": "alnum"
+//          },
+//          {
+//              "type": "xdigit_type",
+//              "proto": "no_arguments",
+//              "generator": "no_argument",
+//              "data": "xdigit",
+//              "name": "xdigit"
+//          },
+//          {
+//            "type": "lower_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "lower",
+//            "name": "lower"
+//          },
+//          {
+//            "type": "graph_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "graph",
+//            "name": "graph"
+//          },
+//          {
+//            "type": "upper_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "upper",
+//            "name": "upper"
+//          },
+//          {
+//            "type": "punct_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "punct",
+//            "name": "punct"
+//          },
+//          {
+//            "type": "print_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "print",
+//            "name": "print"
+//          },
+//          {
+//            "type": "cntrl_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "cntrl",
+//            "name": "cntrl"
+//          },
+//          {
+//            "type": "space_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "space",
+//            "name": "space"
+//          },
+//          {
+//            "type": "blank_type",
+//            "proto": "no_arguments",
+//            "generator": "no_argument",
+//            "data": "blank",
+//            "name": "blank"
+//          }
         ]
       },
       {},
@@ -685,145 +692,143 @@ Config.categories = [
         "ref": "catInteger",
         "proto": "integer_select",
         "blocks": [
+//          {
+//            "type": "integer_type",
+//            "proto": "integer_accept_all",
+//            "generator": "integer_generator",
+//            "name": "integer"
+//          },
           {
-            "type": "integer_type",
-            "proto": "integer_accept_all",
+            "type": "signed_integer_type",
+            "proto": "single_integer_value",
             "shadow": "integerShadow",
-            "generator": "integer_generator",
-            "name": "integer"
-          },
-          {
-            "type": "integer_all_type",
-            "proto": "integer_all",
-            "generator": "integer_all_generator",
-            "name": "integer_all"
-          },
-          {
-            "type": "integer_input_type",
-            "proto": "integer_input",
-            "generator": "integer_input_generator",
-            "data": "char",
-            "name": "integer_input"
-          },
-          {
-            "type": "integer_range_input_type",
-            "proto": "integer_range_input",
-            "generator": "integer_range_input_generator",
-            "data": "char",
-            "name": "integer_range_input"
-          },
-          {
-            "type": "integer_digits_input_type",
-            "proto": "integer_digits_input",
-            "generator": "integer_digits_input_generator",
-            "data": "char",
-            "name": "integer_digits_input"
-          },
-          {
-            "type": "bin_select_type",
-            "generator": "no_argument",
-            "data": "bin",
-            "name": "bin_select"
-          },
-          {
-            "type": "oct_select_type",
-            "generator": "no_argument",
-            "data": "oct",
-            "name": "oct_select"
-          },
-          {
-            "type": "hex_select_type",
-            "generator": "no_argument",
-            "data": "hex",
-            "name": "hex_select"
-          },
-          {
-            "type": "ushort_select_type",
-            "generator": "no_argument",
-            "data": "ushort",
-            "name": "ushort_select"
-          },
-          {
-            "type": "uint_select_type",
-            "generator": "no_argument",
-            "data": "uint",
-            "name": "uint_select"
-          },
-          {
-            "type": "ulong_select_type",
-            "generator": "no_argument",
-            "data": "ulong",
-            "name": "ulong_select"
-          },
-          {
-            "type": "ulonglong_select_type",
-            "generator": "no_argument",
-            "data": "ulonglong",
-            "name": "ulonglong_select"
-          },
-          {
-            "type": "short_select_type",
-            "generator": "no_argument",
-            "data": "short",
-            "name": "short_select"
-          },
-          {
-            "type": "int_select_type",
             "generator": "no_argument",
             "data": "int",
-            "name": "int_select"
+            "name": "signed_integer"
           },
           {
-            "type": "long_select_type",
+            "type": "unsigned_integer_type",
+            "proto": "single_integer_value",
+            "shadow": "integerShadow",
             "generator": "no_argument",
-            "data": "long",
-            "name": "long_select"
+            "data": "int",
+            "name": "unsigned_integer"
           },
           {
-            "type": "longlong_select_type",
+            "type": "floating_point_type",
+            "proto": "single_integer_value",
+            "shadow": "integerShadow",
             "generator": "no_argument",
-            "data": "longlong",
-            "name": "longlong_select"
-          }
-        ]
-      },
-      {
-        "ref": "catFloat",
-        "shadow": "floatShadow",
-        "proto": "float_accept_all",
-        "blocks": [
-          {
-            "type": "float_all_type",
-            "proto": "float_all",
-            "shadow": "none",
-            "generator": "integer_all_generator",
-            "name": "float_all"
-          },
-          {
-            "type": "float_input_type",
-            "proto": "float_input",
-            "shadow": "none",
-            "generator": "integer_input_generator",
-            "name": "float_input"
-          },
-          {
-            "type": "float_type",
-            "generator": "byte_generator",
             "data": "float",
-            "name": "float"
+            "name": "floating_point"
           },
           {
-            "type": "double_type",
-            "generator": "byte_generator",
-            "data": "double",
-            "name": "double"
+            "type": "bin_type",
+            "proto": "single_integer_value",
+            "generator": "no_argument",
+            "shadow": "integerShadow",
+            "data": "bin",
+            "name": "bin"
           },
           {
-            "type": "long_double_type",
-            "generator": "byte_generator",
-            "data": "long_double",
-            "name": "long_double"
-          }
+            "type": "oct_type",
+            "proto": "single_integer_value",
+            "shadow": "integerShadow",
+            "generator": "no_argument",
+            "data": "oct",
+            "name": "oct"
+          },
+          {
+            "type": "hex_type",
+            "proto": "single_integer_value",
+            "shadow": "integerShadow",
+            "generator": "no_argument",
+            "data": "hex",
+            "name": "hex"
+          },
+          {
+              "type": "integer_all_type",
+              "proto": "integer_all",
+              "generator": "integer_all_generator",
+              "name": "integer_all"
+          },
+          {
+              "type": "integer_input_type",
+              "proto": "integer_input",
+              "generator": "integer_input_generator",
+              "data": "char",
+              "name": "integer_input"
+          },
+          {
+              "type": "integer_range_input_type",
+              "proto": "integer_range_input",
+              "generator": "integer_range_input_generator",
+              "data": "char",
+              "name": "integer_range_input"
+          },
+          {
+              "type": "integer_digits_input_type",
+              "proto": "integer_digits_input",
+              "generator": "integer_digits_input_generator",
+              "data": "char",
+              "name": "integer_digits_input"
+          },
+//          {
+//            "type": "ushort_select_type",
+//            "proto": "single_integer_value",
+//            "generator": "no_argument",
+//            "data": "ushort",
+//            "name": "ushort_select"
+//          },
+//          {
+//            "type": "uint_select_type",
+//            "proto": "single_integer_value",
+//            "generator": "no_argument",
+//            "data": "uint",
+//            "name": "uint_select"
+//          },
+//          {
+//            "type": "ulong_select_type",
+//            "proto": "single_integer_value",
+//            "generator": "no_argument",
+//            "data": "ulong",
+//            "name": "ulong_select"
+//          },
+//          {
+//            "type": "ulonglong_select_type",
+//            "proto": "single_integer_value",
+//            "generator": "no_argument",
+//            "data": "ulonglong",
+//            "name": "ulonglong_select"
+//          },
+//          {
+//            "type": "short_select_type",
+//            "proto": "single_integer_value",
+//            "generator": "no_argument",
+//            "data": "short",
+//            "name": "short_select"
+//          },
+//          {
+//            "type": "int_select_type",
+//            "proto": "single_integer_value",
+//            "generator": "no_argument",
+//            "data": "int",
+//            "name": "int_select"
+//          },
+//          {
+//            "type": "long_select_type",
+//            "proto": "single_integer_value",
+//            "generator": "no_argument",
+//            "data": "long",
+//            "name": "long_select"
+//          },
+//          {
+//            "type": "longlong_select_type",
+//            "proto": "single_integer_value",
+//            "generator": "no_argument",
+//            "data": "longlong",
+//            "name": "longlong_select"
+//          }
         ]
       },
       {},
@@ -832,20 +837,6 @@ Config.categories = [
         "shadow": "binaryShadow",
         "proto": "binary",
         "blocks": [
-          {
-            "type": "binary_all_type",
-            "proto": "binary_all",
-            "shadow": "none",
-            "generator": "integer_all_generator",
-            "name": "binary_all"
-          },
-          {
-            "type": "binary_input_type",
-            "proto": "binary_input",
-            "shadow": "none",
-            "generator": "integer_input_generator",
-            "name": "binary_input"
-          },
           {
             "type": "byte_type",
             "proto": "binary_accept_all",
@@ -885,35 +876,39 @@ Config.categories = [
             "name": "bin_double"
           },
           {
-            "type": "little_endian_type",
-            "proto": "endianness",
-            "shadow": "none",
-            "data": 'little_',
-            "generator": "parser_select_generator",
-            "name": "little_endian"
+              "type": "binary_all_type",
+              "proto": "binary_all",
+              "shadow": "none",
+              "generator": "integer_all_generator",
+              "name": "binary_all"
           },
           {
-            "type": "big_endian_type",
-            "proto": "endianness",
-            "shadow": "none",
-            "data": 'big_',
-            "generator": "parser_select_generator",
-            "name": "big_endian"
+              "type": "binary_input_type",
+              "proto": "binary_input",
+              "shadow": "none",
+              "generator": "integer_input_generator",
+              "name": "binary_input"
           },
-          {
-            "type": "native_endian_type",
-            "proto": "endianness",
-            "shadow": "none",
-            "data": "",
-            "generator": "parser_select_generator",
-            "name": "native_endian"
-          }
         ]
       },
       {},
       {
         "ref": "catAuxiliary",
         "blocks": [
+          {
+            "type": "eol_type",
+            "proto": "no_arguments",
+            "generator": "no_argument",
+            "data": "eol",
+            "name": "eol"
+          },
+          {
+            "type": "eoi_type",
+            "proto": "no_arguments",
+            "generator": "no_argument",
+            "data": "eoi",
+            "name": "eoi"
+          },
           {
             "type": "eps_type",
             "proto": "no_arguments",
