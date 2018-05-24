@@ -79,10 +79,8 @@ JsonBlockBuilder.prototype.setOutput = function(b) {
     return this;
 }
 
-JsonBlockBuilder.prototype.addParserConnections = function() {
-    var accept = 'parser';
+JsonBlockBuilder.prototype.addConnections = function(accept) {
     this.block.nextStatement = accept;
     this.block.previousStatement = accept;
     return this;
 }
-

@@ -207,7 +207,6 @@
     blockAndMsg1: "test success of",
     blockAsStringMsg1: "as string",
     blockAttrMsg1: "direct attribute",
-    blockBigEndianMsg1: "(big endian byte order)",
     blockBinDoubleMsg1: "binary double",
     blockBinFloatMsg1: "binary float",
     blockBinMsg1: "binary number",
@@ -235,12 +234,10 @@
     blockLazyMsg1: "lazily do",
     blockListMsg1: "list of",
     blockLitMsg1: "literal",
-    blockLittleEndianMsg1: "(little endian byte order)",
     blockLongDoubleMsg1: "long double",
     blockLongLongMsg1: "long long",
     blockLongMsg1: "long",
     blockMatchesMsg1: "matches",
-    blockNativeEndianMsg1: "(machine native byte order)",
     blockNoCaseMsg1: "ignoring case get",
     blockNoSkipMsg1: "without skipping",
     blockLexemeMsg1: "without intermediate skipping",
@@ -255,7 +252,7 @@
     blockRepeatMsg1: "repeat",
     blockRepeatMsg2: "times",
     blockRuleMsg1: "rule",
-    blockReferenceMsg1: "reference",
+    blockReferenceMsg1: "reference to",
     blockSequenceMsg1: "sequence of",
     blockSequentialOrMsg1: "sequential or",
     blockShortMsg1: "short",
@@ -282,11 +279,10 @@
     blockCharSingleInputMsg1:"",
     blockGrammarMsg1:"grammar",
     blockGrammarMsg2:"rules",
-    blockGrammarMsg4:"start rule",
+    blockGrammarMsg4:"start with rule",
     blockRuleMsg2:"parser",
     blockListMsg3:"separated by",
     blockDifferenceMsg3:"but not",
-    blockReferenceMsg2:"select rule",
     blockPreskipperMsg1:"and without pre-skipping",
     blockRepeatMinMaxMsg1:"repeat at least",
     blockRepeatMinMaxMsg2:"times but no more than",
@@ -300,7 +296,7 @@
     blockBinaryAllMsg1:"any",
     blockNegateMsg1:"any character but ...",
 
-    // @todo: consider translatable char class dropbox
+    // drop down selections for char_class
     blockAlnumMsg1: "letter or digit",
     blockAlphaMsg1: "letter",
     blockBlankMsg1: "space or tab",
@@ -312,4 +308,14 @@
     blockPunctMsg1: "punctuation character",
     blockSpaceMsg1: "whitespace character",
     blockUpperMsg1: "uppercase character",
-};
+
+    // drop down selections for binary types
+    blockBigEndianMsg1: "(assume big endian byte order)",
+    blockLittleEndianMsg1: "(assume little endian byte order)",
+    blockNativeEndianMsg1: "(assume machine native endian byte order)",
+
+    // drop down selections repeat
+    blockRepeatMinMsg1: "at least",
+    blockRepeatMaxMsg1: "at most",
+    blockRepeatExactlyMsg1: "exactly",
+ };

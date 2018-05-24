@@ -7,6 +7,10 @@ Generator.generators = {
                 return [ '[--> code generator for '+ block.type + ' not implemented yet.]\n', Blockly.PHP.ORDER_NONE ];
             },
 
+            'undone_statement':function(block) {
+                return '[--> code generator for '+ block.type + ' not implemented yet.],\n';
+            },
+
             'no_argument': function(block) {
                 return '["' + this.data + '", []],\n';
             },
@@ -21,7 +25,7 @@ Generator.generators = {
                 var value1 = block.getFieldValue('PARAM1');
                 var value2 = block.getFieldValue('PARAM2');
 
-                return '["' + block.data + '", ["' + value1 + '", "' + value2 +   '"]],\n';
+                return '["' + block.data + '", ["' + value1 + '", "' + value2 + '"]],\n';
             },
 
             'single_parser': function(block) {
@@ -38,7 +42,7 @@ Generator.generators = {
             },
 
             'array_parser': function(block) {
-                // @todo: sequencer einbauen
+                // @todo: assert that there is more than one parser
                 var statements1 = Blockly.PHP.statementToCode(block, 'PARAM1');
                 return '["'+ block.data + '", [\n' + statements1 + ']],';
             },
@@ -117,6 +121,21 @@ Generator.generators = {
                 return '["' + block.data + '", [' + params + ']],\n';
             },
 
+            'rule': function(block) {
+                var name = block.getFieldValue('PARAM1');
+                var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
+                return '["'+ block.data + '", [\n' + Blockly.PHP.INDENT + '"' + name + '",\n' + subject + ']],\n';
+            },
+            'grammar': function(block) {
+                var name = block.getFieldValue('PARAM1');
+                var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
+                var start = block.getFieldValue('PARAM3');
+                return '["'+ block.data + '", [\n'
+                    + Blockly.PHP.INDENT + '"' + name + '",\n'
+                    + subject
+                    + Blockly.PHP.INDENT + '"' + start + '",\n'
+                    + ']],\n';
+            }
         },
 }
 

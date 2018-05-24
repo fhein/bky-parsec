@@ -1,180 +1,5 @@
 var Config = {};
 
-Config.tracker = {};
-
-Config.createBlock = function(setup) {
-    this.jbb.create(setup);
-    var proto = setup.proto;
-    this.tracker[proto] = true;
-    switch(proto) {
-        case 'no_arguments':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_dummy'});
-            break;
-
-        case 'single_parser':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_dummy'})
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%');
-            break;
-
-        case 'dual_parser':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_dummy'})
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%')
-                .addInput(0, {type:'input_dummy'})
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%');
-            break;
-
-        case 'single_text_field':
-            // @todo: Handle different default values
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'field_input', text:'a'})
-            break;
-
-        case 'single_number_field':
-            // @todo: Handle different default values
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'field_number', value:0})
-            break;
-
-        case 'single_integer_value':
-            // @todo: Handle different default values
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_value',check:['integer_input', 'integer_all']})
-            break;
-
-        case 'char_range':
-            this.jbb
-                .addInput(0, {type:'field_input',text:'0'})
-                .addInput(0, {type:'field_input',text:'9'})
-                .addParserConnections();
-            break;
-
-        case 'char_class':
-            this.jbb
-                .addInput(0, {type:'field_dropdown',
-                    options: [
-                        ['alpha', 'alpha'],
-                        ['digit', 'digit'],
-                        ['alnum', 'alnum'],
-                        ['xdigit', 'xdigit'],
-                        ['punct', 'punct'],
-                        ['space', 'space'],
-                        ['blank', 'blank'],
-                        ['cntrl', 'cntrl'],
-                        ['lower', 'lower'],
-                        ['upper', 'upper'],
-                        ['graph', 'graph'],
-                        ['print', 'print'],
-                ]})
-                .addParserConnections();
-            break;
-
-        case 'binary_accept_all':
-            var type = proto.substr(0,proto.indexOf('_'));
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_value',check:[type + '_input', type + '_all']})
-            break;
-
-        case 'binary_input':
-        case 'integer_input':
-            this.jbb
-                .addInput(0, {type:'field_number',value:123}, '%%')
-                .setOutput(proto);
-            break;
-
-        // note: code generators are different for the next both
-        case 'integer_digits_input':
-        case 'integer_range_input':
-            this.jbb
-                .addInput(0, {type:'field_number',value:1})
-                .addInput(0, {type:'field_number',value:3})
-                .setOutput('integer_input')
-                .setExtensions(['onchange_stack', 'onchange_get_parent_colour']);
-            break;
-
-        case 'repeat':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'field_dropdown', options: [
-                    ['exactly', 'exactly'],
-                    ['at least', 'min'],
-                    ['at most', 'max'],
-                ]})
-                .addInput(0, {type:"field_number", value:2},'%% %message%')
-                .addInput(1, {type:"input_statement", check:"parser"},'%%')
-            break;
-
-        case 'repeat_min_max':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:"input_dummy"},'%% %message%')
-                .addInput(1, {type:"field_number", value:2},'%% %message%')
-                .addInput(2, {type:"field_number", value:2},'%% %message%')
-                .addInput(3, {type:"input_statement", check:"parser"},'%%')
-                .inputsInline(true);
-            break;
-
-        case 'binary':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'field_dropdown',
-                    options: [
-                        ['(assume little endian byte order)', 'little_'],
-                        ['(assume native endian byte order)', ''],
-                        ['(assume big endian byte order)', 'big_'],
-                ]}, '%message% %%')
-                .addInput(0,{type:'input_value', check:['binary_input', 'binary_all']}, '%%')
-            break;
-
-        case 'accept_all':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_value'})
-                .inputsInline(true);
-            break;
-
-        case 'grammar':
-            this.jbb
-                .addInput(0, {type:'field_input', text:'new grammar'})
-                .addInput(1,{type:'input_dummy'})
-                .addInput(1,{type:'input_statement', check:'reference'}, '%%')
-                .addInput(2,{type:'field_dropdown',options:[['hello','hello'], ['world', 'world']]});
-            break;
-
-        case 'rule':
-            this.jbb
-                .addInput(0, {type:'field_input', text:'new rule'})
-                .addInput(1,{type:'input_dummy'})
-                .addInput(1,{type:'input_statement',check:'parser'},  '%%');
-            break;
-
-        case 'reference':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_dummy'})
-                .addInput(1, {type:'field_dropdown', options:[['hello','hello'], ['world', 'world']]})
-            break;
-
-        default:
-            this.jbb
-                .addInput(0, {type:'input_dummy'})
-                .setOutput(proto);
-            break;
-     }
-     return this.jbb.get();
-}
-
-
-
 Config.shadows = {
         'byteShadow':        [['value', 'PARAM1', 'shadow', 'binary_input_type'],
                               ['value', 'PARAM1', 'block', 'binary_all_type']],
@@ -195,21 +20,22 @@ Config.categories = [
           {
             "type": "rule_type",
             "proto": "rule",
-            "generator": "undone",
+            "generator": "rule",
             "data": "rule",
             "name": "rule"
           },
           {
             "type": "grammar_type",
             "proto": "grammar",
-            "generator": "undone",
+            "generator": "grammar",
             "data": "grammar",
             "name": "grammar"
           },
           {
             "type": "reference_type",
             "proto": "reference",
-            "generator": "undone",
+            "generator": "single_text_field",
+            "data": "reference",
             "name": "reference"
           }
         ]
@@ -653,7 +479,7 @@ Config.categories = [
           {
             "type": "attr_type",
             "proto": "accept_all",
-            "generator": "undone",
+            "generator": "undone_statement",
             "data": "attr",
             "name": "attr"
           },
@@ -674,6 +500,179 @@ Config.categories = [
         ]
       }
     ];
+
+
+
+Config.createBlock = function(setup) {
+    this.jbb.create(setup);
+    var proto = setup.proto;
+    var parser = [ 'parser', 'reference' ];
+
+    switch(proto) {
+        case 'no_arguments':
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'input_dummy'});
+            break;
+
+        case 'single_parser':
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'input_statement',check:parser}, '%%');
+            break;
+
+        case 'dual_parser':
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'input_statement',check:parser}, '%%')
+                .addInput(0, {type:'input_dummy'})
+                .addInput(0, {type:'input_statement',check:parser}, '%%');
+            break;
+
+        case 'single_text_field':
+            // @todo: Handle different default values
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'field_input', text:'a'})
+            break;
+
+        case 'single_number_field':
+            // @todo: Handle different default values
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'field_number', value:0})
+            break;
+
+        case 'single_integer_value':
+            // @todo: Handle different default values
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'input_value',check:['integer_input', 'integer_all']})
+            break;
+
+        case 'char_range':
+            this.jbb
+                .addInput(0, {type:'field_input',text:'0'})
+                .addInput(0, {type:'field_input',text:'9'})
+                .addConnections(parser);
+            break;
+
+        case 'char_class':
+            this.jbb
+                .addInput(0, {type:'field_dropdown',
+                    options: [
+                        ['%{BKY_ALPHA_MSG1}', 'alpha'],
+                        ['%{BKY_DIGIT_MSG1}', 'digit'],
+                        ['%{BKY_ALNUM_MSG1}', 'alnum'],
+                        ['%{BKY_XDIGIT_MSG1}', 'xdigit'],
+                        ['%{BKY_punct_MSG1}', 'punct'],
+                        ['%{BKY_SPACE_MSG1}', 'space'],
+                        ['%{BKY_BLANK_MSG1}', 'blank'],
+                        ['%{BKY_CNTRL_MSG1}', 'cntrl'],
+                        ['%{BKY_LOWER_MSG1}', 'lower'],
+                        ['%{BKY_UPPER_MSG1}', 'upper'],
+                        ['%{BKY_GRAPH_MSG1}', 'graph'],
+                        ['%{BKY_PRINT_MSG1}', 'print'],
+                ]})
+                .addConnections(parser);
+            break;
+
+        case 'binary_accept_all':
+            var type = proto.substr(0,proto.indexOf('_'));
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'input_value',check:[type + '_input', type + '_all']})
+            break;
+
+        case 'binary_input':
+        case 'integer_input':
+            this.jbb
+                .addInput(0, {type:'field_number',value:123}, '%%')
+                .setOutput(proto);
+            break;
+
+        // note: code generators are different for the next both
+        case 'integer_digits_input':
+        case 'integer_range_input':
+            this.jbb
+                .addInput(0, {type:'field_number',value:1})
+                .addInput(0, {type:'field_number',value:3})
+                .setOutput('integer_input')
+                .setExtensions(['onchange_stack', 'onchange_get_parent_colour']);
+            break;
+
+        case 'repeat':
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'field_dropdown', options: [
+                    ['%{BKY_REPEAT_EXACTLY_MSG1}', 'exactly'],
+                    ['%{BKY_REPEAT_MIN_MSG1}', 'min'],
+                    ['%{BKY_REPEAT_MAX_MSG1}', 'max'],
+                ]})
+                .addInput(0, {type:"field_number", value:2},'%% %message%')
+                .addInput(1, {type:"input_statement", check:"parser"},'%%')
+            break;
+
+        case 'repeat_min_max':
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:"input_dummy"},'%% %message%')
+                .addInput(1, {type:"field_number", value:2},'%% %message%')
+                .addInput(2, {type:"field_number", value:2},'%% %message%')
+                .addInput(3, {type:"input_statement", check:"parser"},'%%')
+                .inputsInline(true);
+            break;
+
+        case 'binary':
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'field_dropdown',
+                    options: [
+                        ['%{BKY_LITTLE_ENDIAN_MSG1}', 'little_'],
+                        ['%{BKY_NATIVE_ENDIAN_MSG1}', ''],
+                        ['%{BKY_BIG_ENDIAN_MSG1}', 'big_'],
+                ]}, '%message% %%')
+                .addInput(0,{type:'input_value', check:['binary_input', 'binary_all']}, '%%')
+            break;
+
+        case 'accept_all':
+            this.jbb
+                .addConnections(parser)
+                .addInput(0, {type:'input_value'})
+                .inputsInline(true);
+            break;
+
+        case 'grammar':
+            this.jbb
+                .addInput(0, {type:'field_input', text:'new grammar'})
+                .addInput(1,{type:'input_dummy'})
+                .addInput(1,{type:'input_statement', check:'reference'}, '%%')
+                .addInput(2,{type:'field_dropdown',options:[['hello','hello'], ['world', 'world']]});
+            break;
+
+        case 'rule':
+            this.jbb
+                .addInput(0, {type:'field_input', text:'new rule'})
+                .addInput(1,{type:'input_dummy'})
+                .addInput(1,{type:'input_statement',check:parser},  '%%');
+            break;
+
+        case 'reference':
+            this.jbb
+                .addConnections('reference')
+                .addInput(0, {type:'field_dropdown', options:[['hello','hello'], ['world', 'world']]})
+            break;
+
+        default:
+            this.jbb
+                .addInput(0, {type:'input_dummy'})
+                .setOutput(proto);
+            break;
+     }
+     return this.jbb.get();
+}
 
 Config.getBlocks = function() {
     var json = [];
@@ -721,6 +720,7 @@ Config.setupMessages = function() {
         if (key.indexOf(topic) === len) {
             key = key.substr(0,len).toUnderScore().toUpperCase() + '_' + topic.toUpperCase();
             Blockly.Msg[key] = MSG[mkey];
+            console.log(key);
             return true;
         }
         return false;
@@ -784,12 +784,9 @@ Config.setup = function() {
     };
 }
 
-Config.blockIdx = {};
-
 Config.getToolbox = function() {
     // generate the toolbox XML
     toolbox = '<xml>';
-    var blockIdx = 0;
     for (var cat of Config.categories) {
         if (Object.keys(cat).length === 0) {
             toolbox += '<sep></sep>';
@@ -812,7 +809,6 @@ Config.getToolbox = function() {
                 console.log(bType);
             }
             Extensions.addParserGeneratorAssoc(bType,data);
-            this.blockIdx[bType] = blockIdx++;
 
             var shadow = block['shadow'] ? block['shadow'] : cat['shadow'] ? cat['shadow'] : 'none';
             if (shadow !== 'none') {
