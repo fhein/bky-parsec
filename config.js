@@ -750,15 +750,6 @@ Config.createBlock = function(setup) {
       break;
 
     case 'reference':
-
-      this.jbb
-        .addParserConnections()
-        .addInput(0, {type:'input_dummy'})
-        //.addInput(1, {type:'field_dropdown', options:[['hello','hello'], ['world', 'world']]})
-        .addInput(1, {type:'input_dummy'})
-        .setExtensions(['reference_dropdown']);
-      break;
-
       this.jbb
         .addConnections('reference')
         .addInput(0, {type:'input_dummy'})
@@ -771,7 +762,7 @@ Config.createBlock = function(setup) {
 //            ['world', 'world']
 //          ]
 //        })
-       .setExtensions(['reference_dropdown']);
+       .setExtensions(['reference_dropdown', 'makeParserUndeletable']);
       break;
 
     default:

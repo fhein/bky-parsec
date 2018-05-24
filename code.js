@@ -387,6 +387,45 @@ var mxcParsec = (function($, undefined) {
       }
     });
 
+// corrects parserNames Array if a rule or grammar block is deleted
+  function onDeletionNameHandler(event){
+	   if (event.type == Blockly.Events.DELETE){
+	    	
+	    	var parser = new DOMParser();
+	    	
+	    	var blockXML = event.oldXml.outerHTML;
+	    	var doc = parser.parseFromString(blockXML,"text/html");
+	    	var blockHtml = doc.getElementsByTagName("block");
+	    	var blockType = blockHtml[0].getAttribute("type");
+	    	
+	    	if (blockType == "rule_type" || blockType == "grammar_type"){
+	    		var blockField = blockHtml[0].children[0];
+	    		var blockName = blockField.innerHTML;
+	    		if (parserNames.includes(blockName)){
+					var i= parserNames.indexOf(blockName);
+					parserNames.splice(i,1);
+				}
+	    	}
+	    	
+	    	if (blockType == "reference_type"){
+	    		debugger;
+	    		var allTopBlocks = Code.workspace.getTopBlocks(false);
+	    		
+	    		var blockField = blockHtml[0].children[0];
+	    		var blockName = blockField.innerHTML;
+	    		
+				for(var topBlock of allTopBlocks){
+					var topBlockName = topBlock.getFieldValue('PARAM1');
+
+					if (topBlockName == blockName){
+						makeBlockDeletable(topBlock);
+					}
+
+				}
+	    	}
+	    }
+  }    
+
     workspace.configureContextMenu = customContextMenuFn;
 
     workspace.addChangeListener(onDeletionNameHandler);
@@ -541,3 +580,9 @@ function dynamicReferenceOptions() {
 })(mxcParsec = mxcParsec || {});
 
 console.log('Here we go: ', mxcParsec);
+
+//Code.workspace.addChangeListener(checkForDeletion);
+//Blockly.workspace.addChangeListener(checkForDeletion);
+function checkForDeletion() {
+	var test = this;
+}
