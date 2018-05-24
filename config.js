@@ -1,8 +1,11 @@
 var Config = {};
 
+Config.tracker = {};
+
 Config.createBlock = function(setup) {
     this.jbb.create(setup);
     var proto = setup.proto;
+    this.tracker[proto] = true;
     switch(proto) {
         case 'no_arguments':
             this.jbb
@@ -45,15 +48,6 @@ Config.createBlock = function(setup) {
             this.jbb
                 .addParserConnections()
                 .addInput(0, {type:'input_value',check:['integer_input', 'integer_all']})
-//                .inputsInline(true);
-            break;
-
-        case 'dual_text_field':
-            // @todo: Handle different default values
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'field_input', text:'a'})
-                .addInput(0, {type:'field_input',text:'9'})
             break;
 
         case 'char_range':
@@ -83,15 +77,6 @@ Config.createBlock = function(setup) {
                 .addParserConnections();
             break;
 
-        case 'integer_accept_all':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_value',check:'integer_select'}, '%% %message%')
-                .addInput(0, {type:'input_value',check:['integer_input', 'integer_all']}, '%%')
-                .inputsInline(true)
-                .setExtensions(['onchange_stack','onchange_warning_example', 'onchange_restore_default_colour']);
-            break;
-
         case 'binary_accept_all':
             var type = proto.substr(0,proto.indexOf('_'));
             this.jbb
@@ -99,22 +84,12 @@ Config.createBlock = function(setup) {
                 .addInput(0, {type:'input_value',check:[type + '_input', type + '_all']})
             break;
 
-        case 'no_skip':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'input_statement',check:'parser'}, '%%')
-                .inputsInline(true);
-            break;
-
-
         case 'binary_input':
-        case 'float_input':
         case 'integer_input':
             this.jbb
                 .addInput(0, {type:'field_number',value:123}, '%%')
                 .setOutput(proto);
             break;
-
 
         // note: code generators are different for the next both
         case 'integer_digits_input':
@@ -126,52 +101,26 @@ Config.createBlock = function(setup) {
                 .setExtensions(['onchange_stack', 'onchange_get_parent_colour']);
             break;
 
-        case 'string':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'field_input',text:'string'})
-                .inputsInline(true);
-            break;
-
         case 'repeat':
             this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_value', check:'repeat_input'})
-                .addInput(0, {type:"input_statement", check:"parser"},'%%')
-            break;
-
-        case 'repeat_exactly_input':
-            this.jbb
+                .addInput(0, {type:'field_dropdown', options: [
+                    ['exactly', 'exactly'],
+                    ['at least', 'min'],
+                    ['at most', 'max'],
+                ]})
                 .addInput(0, {type:"field_number", value:2},'%% %message%')
-                .setOutput('repeat_input')
-                .inputsInline(true);
+                .addInput(1, {type:"input_statement", check:"parser"},'%%')
             break;
 
-        case 'repeat_min_input':
-            this.jbb
-                .addInput(0, {type:"input_dummy"},'%% %message%')
-                .addInput(1, {type:"field_number", value:2},'%% %message%')
-                .setOutput('repeat_input')
-                .inputsInline(true);
-            break;
-
-        case 'repeat_min_max_input':
-            this.jbb
-                .addInput(0, {type:"input_dummy"},'%% %message%')
-                .addInput(1, {type:"field_number", value:2},'%% %message%')
-                .addInput(2, {type:"input_dummy"},'%% %message%')
-                .addInput(3, {type:"field_number", value:2},'%% %message%')
-                .setOutput('repeat_input')
-                .inputsInline(true);
-            break;
-
-        case 'float':
-        case 'integer':
+        case 'repeat_min_max':
             this.jbb
                 .addParserConnections()
-                .addInput(0, {type:'input_value',check:proto})
-                .inputsInline(true)
-                .setExtensions(['onchange_stack', 'onchange_set_parent_colour']);
+                .addInput(0, {type:"input_dummy"},'%% %message%')
+                .addInput(1, {type:"field_number", value:2},'%% %message%')
+                .addInput(2, {type:"field_number", value:2},'%% %message%')
+                .addInput(3, {type:"input_statement", check:"parser"},'%%')
+                .inputsInline(true);
             break;
 
         case 'binary':
@@ -186,20 +135,12 @@ Config.createBlock = function(setup) {
                 .addInput(0,{type:'input_value', check:['binary_input', 'binary_all']}, '%%')
             break;
 
-        case 'integer_field':
-            this.jbb
-                .addParserConnections()
-                .addInput(0, {type:'field_number',value:123})
-                .inputsInline(true);
-            break;
-
         case 'accept_all':
             this.jbb
                 .addParserConnections()
                 .addInput(0, {type:'input_value'})
                 .inputsInline(true);
             break;
-
 
         case 'grammar':
             this.jbb
@@ -216,29 +157,11 @@ Config.createBlock = function(setup) {
                 .addInput(1,{type:'input_statement',check:'parser'},  '%%');
             break;
 
-        case 'ref':
+        case 'reference':
             this.jbb
                 .addParserConnections()
                 .addInput(0, {type:'input_dummy'})
                 .addInput(1, {type:'field_dropdown', options:[['hello','hello'], ['world', 'world']]})
-            break;
-
-//        case 'binary_all':
-        case 'char_all':
-//        case 'integer_all':
-        case 'float_all':
-        case 'preskipper_all':
-            this.jbb
-                .addInput(0, {type:'input_dummy'}, '%%')
-                .setOutput(proto)
-                .setExtensions(['onchange_stack', 'onchange_get_parent_colour', /*'onchange_became_topblock'*/]);
-            break;
-
-        case 'integer_select':
-            this.jbb
-                .addInput(0, {type:'input_dummy'})
-                .setOutput(proto)
-                .setExtensions(['test', 'onchange_stack', 'use_parent_tooltip', 'onchange_set_parent_colour', /*'onchange_became_topblock'*/]);
             break;
 
         default:
@@ -253,49 +176,40 @@ Config.createBlock = function(setup) {
 
 
 Config.shadows = {
-        'allNullShadow':     [['value','PARAM1','shadow','integer_all_type']],
-
         'byteShadow':        [['value', 'PARAM1', 'shadow', 'binary_input_type'],
                               ['value', 'PARAM1', 'block', 'binary_all_type']],
 
-        'floatShadow':       [['value', 'PARAM1', 'shadow', 'float_input_type'],
-                              ['value', 'PARAM1', 'block', 'float_all_type']],
+        'binaryShadow':      [['value', 'PARAM2', 'shadow', 'binary_input_type'],
+                              ['value', 'PARAM2', 'block', 'binary_all_type']],
 
-        'binaryShadow':      [['value', 'PARAM2', 'block', 'binary_all_type']],
-
-        'integerShadow':     [['value', 'PARAM1', 'block', 'integer_all_type']],
-
-        'nonDecShadow':      [['value', 'PARAM1', 'shadow', 'nd_input_type'],
-                              ['value', 'PARAM1', 'block', 'nd_all_type']],
-
-//        'preSkipperShadow':  [['value', 'PARAM1', 'shadow', 'preskipper_type'],
-//                              ['value', 'PARAM1', 'block', 'preskipper_all_type']],
+        'integerShadow':     [['value', 'PARAM1', 'shadow', 'integer_input_type'],
+                              ['value', 'PARAM1', 'block', 'integer_all_type']],
 }
 
 Config.categories = [
     {
         "ref": "catRule",
         "proto": "undone",
-        "generator": "undone_generator",
+        "generator": "undone",
         "blocks": [
           {
             "type": "rule_type",
             "proto": "rule",
-            "generator": "undone_generator",
+            "generator": "undone",
             "data": "rule",
             "name": "rule"
           },
           {
             "type": "grammar_type",
             "proto": "grammar",
-            "generator": "undone_generator",
+            "generator": "undone",
             "data": "grammar",
             "name": "grammar"
           },
           {
             "type": "reference_type",
-            "proto": "ref",
-            "generator": "undone_generator",
+            "proto": "reference",
+            "generator": "undone",
             "name": "reference"
           }
         ]
@@ -308,40 +222,29 @@ Config.categories = [
         "blocks": [
             {
                 "type": "expect_type",
-                "generator": "single_parser",
                 "data": "expect",
                 "name": "expect"
           },
           {
               "type": "raw_type",
-              "generator": "single_parser",
               "data": "raw",
               "name": "raw"
           },
           {
               "type": "omit_type",
-              "generator": "single_parser",
               "data": "omit",
               "name": "omit"
           },
           {
               "type": "no_case_type",
-              "generator": "single_parser",
               "data": "no_case",
               "name": "no_case"
           },
           {
             "type": "matches_type",
-            "generator": "single_parser",
             "data": "matches",
             "name": "matches"
           },
-//          {
-//              "type": "hold_type",
-//              "generator": "single_parser",
-//              "data": "hold",
-//              "name": "hold"
-//          },
         ]
       },
       {},
@@ -366,20 +269,20 @@ Config.categories = [
         "blocks": [
           {
               "type": "sequence_type",
-              "generator": "undone_generator",
+              "generator": "array_parser",
               "data": "sequence",
               "name": "sequence"
           },
           {
             "type": "kleene_star_type",
             "generator": "single_parser",
-            "data": "kleene",
+            "data": "kleene_star",
             "name": "kleene_star"
           },
           {
             "type": "kleene_plus_type",
             "generator": "single_parser",
-            "data": "plus",
+            "data": "kleene_plus",
             "name": "kleene_plus"
           },
           {
@@ -391,67 +294,52 @@ Config.categories = [
           {
             "type": "list_type",
             "proto": "dual_parser",
-            "generator": "dual_parser_generator",
+            "generator": "dual_parser",
             "data": "list",
             "name": "list"
           },
           {
             "type": "repeat_type",
             "proto": "repeat",
-            "generator": "repeat_generator",
+            "generator": "repeat",
             "data": "repeat",
             "name": "repeat"
           },
           {
-              "type": "repeat_exactly_type",
-              "proto": "repeat_exactly_input",
-              "generator": "repeat_exactly_generator",
-              "data": "repeat",
-              "name": "repeat_exactly"
-          },
-          {
-              "type": "repeat_min_type",
-              "proto": "repeat_min_input",
-              "generator": "repeat_min_generator",
-              "data": "repeat",
-              "name": "repeat_min"
-          },
-          {
               "type": "repeat_min_max_type",
-              "proto": "repeat_min_max_input",
-              "generator": "repeat_min_max_generator",
+              "proto": "repeat_min_max",
+              "generator": "repeat_min_max",
               "data": "repeat",
               "name": "repeat_min_max"
-          },
+            },
         ]
       },
       {
-        "ref": "catPredicate",
+        "ref": "catLogic",
         "proto": "single_parser",
         "generator": "single_parser",
         "blocks": [
           {
             "type": "alternative_type",
-            "generator": "dual_parser_generator",
             "data": "alternative",
             "name": "alternative"
           },
           {
               "type": "difference_type",
               "proto": "dual_parser",
-              "generator": "undone_generator",
+              "generator": "dual_parser",
               "data": "difference",
               "name": "difference"
           },
           {
               "type": "permutation_type",
-              "generator": "undone_generator",
+              "generator": "array_parser",
               "data": "permutation",
               "name": "permutation"
           },
           {
               "type": "sequential_or_type",
-              "generator": "undone_generator",
+              "generator": "array_parser",
               "data": "sequential_or",
               "name": "sequential_or"
           },
@@ -472,31 +360,28 @@ Config.categories = [
       {
         "ref": "catSkipper",
         "proto": "single_parser",
-        "generator": "undone_generator",
+        "generator": "single_parser",
         "blocks": [
           {
               "type": "lexeme_type",
-              "generator": "no_skip_generator",
               "data": "lexeme",
               "name": "lexeme"
           },
           {
               "type": "no_skip_type",
-              "generator": "no_skip_generator",
               "data": "no_skip",
               "name": "no_skip"
           },
           {
             "type": "skipper_type",
             "proto": "dual_parser",
-            "generator": "undone_generator",
+            "generator": "dual_parser",
             "data": "skip",
             "name": "skipper"
           },
           {
             "type": "skip_type",
             "proto": "single_parser",
-            "generator": "dual_parser_generator",
             "data": "skip",
             "name": "skip"
           },
@@ -505,25 +390,25 @@ Config.categories = [
       {},
       {
         "ref": "catString",
-        "generator": "undone_generator",
+        "generator": "undone",
         "blocks": [
           {
             "type": "string_type",
-            "proto": "string",
+            "proto": "single_text_field",
             "generator": "single_text_field",
             "data": "string",
             "name": "string"
           },
           {
             "type": "lit_type",
-            "proto": "string",
+            "proto": "single_text_field",
             "generator": "single_text_field",
             "data": "lit",
             "name": "lit"
           },
           {
             "type": "symbols_type",
-            "generator": "undone_generator",
+            "generator": "undone",
             "data": "symbols",
             "name": "symbols"
           }
@@ -575,90 +460,6 @@ Config.categories = [
               "data": "char_class",
               "name": "char_class"
           },
-//          {
-//            "type": "alpha_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "alpha",
-//            "name": "alpha"
-//          },
-//          {
-//              "type": "digit_type",
-//              "proto": "no_arguments",
-//              "generator": "no_argument",
-//              "data": "digit",
-//              "name": "digit"
-//          },
-//          {
-//            "type": "alnum_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "alnum",
-//            "name": "alnum"
-//          },
-//          {
-//              "type": "xdigit_type",
-//              "proto": "no_arguments",
-//              "generator": "no_argument",
-//              "data": "xdigit",
-//              "name": "xdigit"
-//          },
-//          {
-//            "type": "lower_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "lower",
-//            "name": "lower"
-//          },
-//          {
-//            "type": "graph_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "graph",
-//            "name": "graph"
-//          },
-//          {
-//            "type": "upper_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "upper",
-//            "name": "upper"
-//          },
-//          {
-//            "type": "punct_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "punct",
-//            "name": "punct"
-//          },
-//          {
-//            "type": "print_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "print",
-//            "name": "print"
-//          },
-//          {
-//            "type": "cntrl_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "cntrl",
-//            "name": "cntrl"
-//          },
-//          {
-//            "type": "space_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "space",
-//            "name": "space"
-//          },
-//          {
-//            "type": "blank_type",
-//            "proto": "no_arguments",
-//            "generator": "no_argument",
-//            "data": "blank",
-//            "name": "blank"
-//          }
         ]
       },
       {},
@@ -668,7 +469,7 @@ Config.categories = [
           {
             "type": "bool_type",
             "proto": "undone",
-            "generator": "undone_generator",
+            "generator": "undone",
             "data": "bool",
             "name": "bool"
           },
@@ -691,18 +492,12 @@ Config.categories = [
       {
         "ref": "catInteger",
         "proto": "integer_select",
+        "generator": "integer",
         "blocks": [
-//          {
-//            "type": "integer_type",
-//            "proto": "integer_accept_all",
-//            "generator": "integer_generator",
-//            "name": "integer"
-//          },
           {
             "type": "signed_integer_type",
             "proto": "single_integer_value",
             "shadow": "integerShadow",
-            "generator": "no_argument",
             "data": "int",
             "name": "signed_integer"
           },
@@ -710,125 +505,64 @@ Config.categories = [
             "type": "unsigned_integer_type",
             "proto": "single_integer_value",
             "shadow": "integerShadow",
-            "generator": "no_argument",
-            "data": "int",
+            "data": "uint",
             "name": "unsigned_integer"
           },
           {
             "type": "floating_point_type",
             "proto": "single_integer_value",
             "shadow": "integerShadow",
-            "generator": "no_argument",
             "data": "float",
             "name": "floating_point"
           },
           {
-            "type": "bin_type",
-            "proto": "single_integer_value",
-            "generator": "no_argument",
-            "shadow": "integerShadow",
-            "data": "bin",
-            "name": "bin"
+              "type": "bin_type",
+              "proto": "single_integer_value",
+              "shadow": "integerShadow",
+              "data": "bin",
+              "name": "bin"
           },
           {
-            "type": "oct_type",
-            "proto": "single_integer_value",
-            "shadow": "integerShadow",
-            "generator": "no_argument",
-            "data": "oct",
-            "name": "oct"
+              "type": "oct_type",
+              "proto": "single_integer_value",
+              "shadow": "integerShadow",
+              "data": "oct",
+              "name": "oct"
           },
           {
-            "type": "hex_type",
-            "proto": "single_integer_value",
-            "shadow": "integerShadow",
-            "generator": "no_argument",
-            "data": "hex",
-            "name": "hex"
+              "type": "hex_type",
+              "proto": "single_integer_value",
+              "shadow": "integerShadow",
+              "data": "hex",
+              "name": "hex"
           },
           {
               "type": "integer_all_type",
               "proto": "integer_all",
-              "generator": "integer_all_generator",
+              "generator": "integer_all",
               "name": "integer_all"
           },
           {
               "type": "integer_input_type",
               "proto": "integer_input",
-              "generator": "integer_input_generator",
+              "generator": "integer_input",
               "data": "char",
               "name": "integer_input"
           },
           {
               "type": "integer_range_input_type",
               "proto": "integer_range_input",
-              "generator": "integer_range_input_generator",
+              "generator": "integer_range_input",
               "data": "char",
               "name": "integer_range_input"
           },
           {
               "type": "integer_digits_input_type",
               "proto": "integer_digits_input",
-              "generator": "integer_digits_input_generator",
+              "generator": "integer_digits_input",
               "data": "char",
               "name": "integer_digits_input"
           },
-//          {
-//            "type": "ushort_select_type",
-//            "proto": "single_integer_value",
-//            "generator": "no_argument",
-//            "data": "ushort",
-//            "name": "ushort_select"
-//          },
-//          {
-//            "type": "uint_select_type",
-//            "proto": "single_integer_value",
-//            "generator": "no_argument",
-//            "data": "uint",
-//            "name": "uint_select"
-//          },
-//          {
-//            "type": "ulong_select_type",
-//            "proto": "single_integer_value",
-//            "generator": "no_argument",
-//            "data": "ulong",
-//            "name": "ulong_select"
-//          },
-//          {
-//            "type": "ulonglong_select_type",
-//            "proto": "single_integer_value",
-//            "generator": "no_argument",
-//            "data": "ulonglong",
-//            "name": "ulonglong_select"
-//          },
-//          {
-//            "type": "short_select_type",
-//            "proto": "single_integer_value",
-//            "generator": "no_argument",
-//            "data": "short",
-//            "name": "short_select"
-//          },
-//          {
-//            "type": "int_select_type",
-//            "proto": "single_integer_value",
-//            "generator": "no_argument",
-//            "data": "int",
-//            "name": "int_select"
-//          },
-//          {
-//            "type": "long_select_type",
-//            "proto": "single_integer_value",
-//            "generator": "no_argument",
-//            "data": "long",
-//            "name": "long_select"
-//          },
-//          {
-//            "type": "longlong_select_type",
-//            "proto": "single_integer_value",
-//            "generator": "no_argument",
-//            "data": "longlong",
-//            "name": "longlong_select"
-//          }
         ]
       },
       {},
@@ -841,37 +575,37 @@ Config.categories = [
             "type": "byte_type",
             "proto": "binary_accept_all",
             "shadow": "byteShadow",
-            "generator": "byte_generator",
+            "generator": "byte",
             "data": "byte",
             "name": "byte"
           },
           {
             "type": "word_type",
-            "generator": "binary_generator",
+            "generator": "binary",
             "data": "word",
             "name": "word"
           },
           {
             "type": "dword_type",
-            "generator": "binary_generator",
+            "generator": "binary",
             "data": "dword",
             "name": "dword"
           },
           {
             "type": "qword_type",
-            "generator": "binary_generator",
+            "generator": "binary",
             "data": "qword",
             "name": "qword"
           },
           {
             "type": "bin_float_type",
-            "generator": "binary_generator",
+            "generator": "binary",
             "data": "bin_float",
             "name": "bin_float"
           },
           {
             "type": "bin_double_type",
-            "generator": "binary_generator",
+            "generator": "binary",
             "data": "bin_double",
             "name": "bin_double"
           },
@@ -879,14 +613,14 @@ Config.categories = [
               "type": "binary_all_type",
               "proto": "binary_all",
               "shadow": "none",
-              "generator": "integer_all_generator",
+              "generator": "integer_all",
               "name": "binary_all"
           },
           {
               "type": "binary_input_type",
               "proto": "binary_input",
               "shadow": "none",
-              "generator": "integer_input_generator",
+              "generator": "integer_input",
               "name": "binary_input"
           },
         ]
@@ -919,7 +653,7 @@ Config.categories = [
           {
             "type": "attr_type",
             "proto": "accept_all",
-            "generator": "undone_generator",
+            "generator": "undone",
             "data": "attr",
             "name": "attr"
           },
@@ -932,8 +666,8 @@ Config.categories = [
           },
           {
             "type": "advance_type",
-            "proto": "integer_field",
-            "generator": "advance_generator",
+            "proto": "single_number_field",
+            "generator": "advance",
             "data": "advance",
             "name": "advance"
           }
@@ -944,6 +678,7 @@ Config.categories = [
 Config.getBlocks = function() {
     var json = [];
     this.extensions = [];
+
     for (var cat of Config.categories) {
         if (Object.keys(cat).length === 0) {
             continue;
@@ -955,15 +690,15 @@ Config.getBlocks = function() {
             setup.bName = block.name;
             setup.proto = block['proto'] ? block['proto'] : cat['proto'] ? cat['proto'] : 'undone';
             setup.parser = block['parser'] ? block['parser'] : cat['parser'] ? cat['parser'] : '';
-            setup.generator = block['generator'] ? block['generator'] : cat['generator'] ? cat['generator'] : 'undone_generator';
+            setup.generator = block['generator'] ? block['generator'] : cat['generator'] ? cat['generator'] : 'undone';
             var jsonBlock = this.createBlock(setup);
             json.push(jsonBlock);
             if (jsonBlock.extensions) {
                 this.extensions = [... new Set([...jsonBlock.extensions, ...this.extensions])];
             }
 
-//            if (proto === 'float_accept_all') {
-//                console.log(builder.createBlock(bType, proto));
+//            if (setup.proto === 'repeat_min_max') {
+//                console.log(this.createBlock(setup));
 //            }
         }
     }
@@ -974,7 +709,8 @@ Config.setupMessages = function() {
     // The toolbox XML specifies each category name using Blockly's messaging
     // format (eg. `<category name='%{BKY_CATLOGIC}'>`).
     // These message keys need to be defined in `Blockly.Msg` in order to
-    // be decoded by the library. Therefore, we'll use the `MSG` dictionary that's
+    // be decoded by the library. Therefore, we'll use the `MSG` dictionary
+    // that's
     // been defined for each language to import each category name message
     // into `Blockly.Msg`.
     // TODO: Clean up the message files so this is done explicitly instead of
@@ -1037,23 +773,8 @@ Config.createSubs = function(config) {
     return xml;
 }
 
-Config.mergeGenerators = function() {
-    var g = Generator.generators;
-    console.log(g);
-    for (var cat of Config.categories) {
-        if (Object.keys(cat).length === 0) {
-            continue;
-        }
-        var blocks = cat.blocks;
-        for (var block of blocks) {
-            block.name = block.type.substr(0,block.type.length-5);
-        }
-    }
-    console.log(JSON.stringify(Config.categories, null, 2));
-}
-
 Config.setup = function() {
-//    this.mergeGenerators();
+// this.mergeGenerators();
     this.jbb = new JsonBlockBuilder();
     this.setupMessages();
     return {
@@ -1085,9 +806,9 @@ Config.getToolbox = function() {
             toolbox += '<block type="' + bType + '">';
             var data = {
                 data: block['data'] ? block['data'] : cat['data'] ? cat['data'] : '',
-                generator: block['generator'] ? block['generator'] : cat['generator'] ? cat['generator'] : 'undone_generator',
+                generator: block['generator'] ? block['generator'] : cat['generator'] ? cat['generator'] : 'undone',
             }
-            if (data.generator === 'undone_generator') {
+            if (data.generator === 'undone') {
                 console.log(bType);
             }
             Extensions.addParserGeneratorAssoc(bType,data);

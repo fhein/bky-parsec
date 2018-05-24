@@ -3,8 +3,12 @@ var Generator = {};
 
 Generator.generators = {
         php: {
-            'undone_generator':function(block) {
+            'undone':function(block) {
                 return [ '[--> code generator for '+ block.type + ' not implemented yet.]\n', Blockly.PHP.ORDER_NONE ];
+            },
+
+            'no_argument': function(block) {
+                return '["' + this.data + '", []],\n';
             },
 
             'single_text_field': function(block) {
@@ -28,108 +32,91 @@ Generator.generators = {
 
             'dual_parser': function(block) {
                 // @todo: sequencer einbauen
-                var statements_param1 = Blockly.PHP.statementToCode(block, 'PARAM1');
-                var statements_param2 = Blockly.PHP.statementToCode(block, 'PARAM2');
-                return '["' + block.data + '", [\n' + statements_param1 + statements_param2 + ']],';
+                var statements1 = Blockly.PHP.statementToCode(block, 'PARAM1');
+                var statements2 = Blockly.PHP.statementToCode(block, 'PARAM2');
+                return '["' + block.data + '", [\n' + statements1 + statements2 + ']],';
             },
 
-            'integer_all_generator': function(block) {
+            'array_parser': function(block) {
+                // @todo: sequencer einbauen
+                var statements1 = Blockly.PHP.statementToCode(block, 'PARAM1');
+                return '["'+ block.data + '", [\n' + statements1 + ']],';
+            },
+
+            'integer_all': function(block) {
                 return [ "null", Blockly.PHP.ORDER_NONE ];
             },
 
-            'integer_digits_input_generator': function(block) {
-                var field_from = block.getFieldValue('PARAM1');
-                var field_to = block.getFieldValue('PARAM2');
-                var code = 'null, ' + field_from + ', ' + field_to;
+            'integer_digits_input': function(block) {
+                var field1 = block.getFieldValue('PARAM1');
+                var field2 = block.getFieldValue('PARAM2');
+                var code = 'null, ' + field1 + ', ' + field2;
                 return [ code, Blockly.PHP.ORDER_NONE ];
             },
 
-            'integer_range_input_generator': function(block) {
-                var field_from = block.getFieldValue('PARAM1');
-                var field_to = block.getFieldValue('PARAM2');
-                var code = 'null, 1, 0, ' + field_from + ', ' + field_to;
+            'integer_range_input': function(block) {
+                var field1 = block.getFieldValue('PARAM1');
+                var field2 = block.getFieldValue('PARAM2');
+                var code = 'null, 1, 0, ' + field1 + ', ' + field2;
                 return [ code, Blockly.PHP.ORDER_NONE ];
             },
 
-            'binary_generator': function(block) {
-                var endianness = Blockly.PHP.valueToCode(block, 'PARAM2', Blockly.PHP.ORDER_NONE);
-                var value = Blockly.PHP.valueToCode(block, 'PARAM1', Blockly.PHP.ORDER_NONE);
+            'binary': function(block) {
+                var endianness = block.getFieldValue('PARAM1');
+                var value = Blockly.PHP.valueToCode(block, 'PARAM2', Blockly.PHP.ORDER_NONE);
                 var code = '["' + endianness + block.data + '", [' + value + ']],\n';
                 return code;
             },
 
-            'byte_generator': function(block) {
+            'byte': function(block) {
                 var value = Blockly.PHP.valueToCode(block, 'PARAM1', Blockly.PHP.ORDER_NONE);
                 var code = '["' + block.data + '", [' + value + ']],\n';
                 return code;
             },
 
-            'integer_input_generator': function(block) {
-                var field_value = block.getFieldValue('PARAM1');
-                return [ field_value, Blockly.PHP.ORDER_NONE ];
-            },
-
-            'repeat_generator': function(block) {
-                var params = Blockly.PHP.valueToCode(block, 'PARAM1', Blockly.PHP.ORDER_NONE);
-                var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
-                return '["'+ block.data + '", [\n' + subject + Blockly.PHP.INDENT + params + '\n]],\n';
-            },
-
-            'repeat_min_max_generator': function(block) {
-                var field_min = block.getFieldValue('PARAM1');
-                var field_max = block.getFieldValue('PARAM2');
-                var code = field_min + ', ' + field_max;
-                return [ code, Blockly.PHP.ORDER_NONE ];
-            },
-
-            'repeat_min_generator': function(block) {
-                var field_min = block.getFieldValue('PARAM1');
-                return [ field_min, Blockly.PHP.ORDER_NONE ];
-            },
-
-            'repeat_exactly_generator': function(block) {
-                var field = block.getFieldValue('PARAM1');
-                var code = field + ', ' + field;
-                return [ code, Blockly.PHP.ORDER_NONE ];
-            },
-
-            'repeat_forever_generator': function(block) {
-                return [ '', Blockly.PHP.ORDER_NONE ];
-            },
-
-            'advance_generator': function(block) {
+            'advance': function(block) {
                 var field_value = block.getFieldValue('PARAM1');
                 return '["' + block.data + '", [' + field_value + ']],\n';
             },
 
-            'integer_generator': function (block) {
-                var parser = Blockly.PHP.valueToCode(block, 'PARAM1', Blockly.PHP.ORDER_NONE);
-                var params = Blockly.PHP.valueToCode(block, 'PARAM2', Blockly.PHP.ORDER_NONE);
-                return '["' + parser + '", [' + params + ']],\n';
+            'integer_input': function(block) {
+                var field_value = block.getFieldValue('PARAM1');
+                return [ field_value, Blockly.PHP.ORDER_NONE ];
             },
 
-            'true_generator': function(block) {
-                return [ 'true', Blockly.PHP.ORDER_NONE ];
+            'repeat': function(block) {
+                var mode = block.getFieldValue('PARAM1');
+                var value = block.getFieldValue('PARAM2');
+                var min, max;
+                switch (mode) {
+                case 'exactly':
+                     min = max = value;
+                     break;
+                case 'min':
+                    min = value;
+                    max = -1;
+                    break;
+                case 'max':
+                    max = value;
+                    min = 0;
+                    break;
+                }
+                var subject = Blockly.PHP.statementToCode(block, 'PARAM3');
+                return '["'+ block.data + '", [\n' + subject + Blockly.PHP.INDENT + min + ', ' + max + '\n]],\n';
             },
 
-            'false_generator': function(block) {
-                return [ 'false', Blockly.PHP.ORDER_NONE ];
+            'repeat_min_max': function(block) {
+                var min = block.getFieldValue('PARAM1');
+                var max = block.getFieldValue('PARAM2');
+                var subject = Blockly.PHP.statementToCode(block, 'PARAM3');
+                return '["'+ block.data + '", [\n' + subject + Blockly.PHP.INDENT + min + ', ' + max + '\n]],\n';
             },
 
-            'no_skip_generator': function(block) {
-                // @todo: sequencer einbauen
-                var parser = Blockly.PHP.valueToCode(block, 'PARAM1', Blockly.PHP.ORDER_NONE);
-                var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
-                return '["'+ parser + '", [\n' + subject + ']],';
+            'integer': function (block) {
+                var params = Blockly.PHP.valueToCode(block, 'PARAM1', Blockly.PHP.ORDER_NONE);
+                return '["' + block.data + '", [' + params + ']],\n';
             },
 
-            'no_argument': function(block) {
-                return '["' + this.data + '", []],\n';
-            },
-
-            'parser_select_generator': function(block) {
-                return [ this.data, Blockly.PHP.ORDER_NONE];
-            },
         },
 }
 

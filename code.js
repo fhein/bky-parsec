@@ -339,7 +339,7 @@ Code.checkAllGeneratorFunctionsDefined = function(generator) {
     if (!generator[blockType]) {
       if (missingBlockGenerators.indexOf(blockType) === -1) {
         missingBlockGenerators.push(blockType);
-        generator[type] = Generator.generators["undone_generator"];
+        generator[blockType] = Generator.generators["undone_generator"];
       }
     }
   }
@@ -404,6 +404,7 @@ Code.init = function() {
           }
       });
   Code.workspace.configureContextMenu = customContextMenuFn;
+
   Code.workspace.addChangeListener(mirrorEvent);
 
   function mirrorEvent(event) {
@@ -411,7 +412,7 @@ Code.init = function() {
       return;  // Don't mirror UI events.
     }
     var json = event.toJson();
-//    console.log(json);
+    // console.log(json);
   }
 
   // Register only the extensions actually used by blocks
