@@ -85,27 +85,6 @@ Extensions.extensions ={
             }
         })
     },
-
-    // this is work in progress
-    // I want the state only on change and only if the
-    // block is not dragged currently
-    'onchange_became_topblock': function() {
-        var that = this;
-        this.topBlockEventCount = 0;
-        this.addChangeHandler(function(changeEvent) {
-            if (!that.getSurroundParent()) {
-                that.topBlockEventCount++;
-                if (that.topBlockEventCount === 3) {
-                    // this works but it deletes the blocks
-                    // from the toolbox also :/
-                    //that.dispose();
-                }
-            } else {
-                console.log(that.id+ ": false");
-                that.topBlockEventCount = 0;
-            }
-        });
-    },
 };
 
 Extensions.init = function(extensionList) {

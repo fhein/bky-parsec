@@ -563,18 +563,18 @@ Config.createBlock = function(setup) {
             this.jbb
                 .addInput(0, {type:'field_dropdown',
                     options: [
-                        ['%{BKY_ALPHA_MSG1}', 'alpha'],
-                        ['%{BKY_DIGIT_MSG1}', 'digit'],
-                        ['%{BKY_ALNUM_MSG1}', 'alnum'],
-                        ['%{BKY_XDIGIT_MSG1}', 'xdigit'],
-                        ['%{BKY_punct_MSG1}', 'punct'],
-                        ['%{BKY_SPACE_MSG1}', 'space'],
-                        ['%{BKY_BLANK_MSG1}', 'blank'],
-                        ['%{BKY_CNTRL_MSG1}', 'cntrl'],
-                        ['%{BKY_LOWER_MSG1}', 'lower'],
-                        ['%{BKY_UPPER_MSG1}', 'upper'],
-                        ['%{BKY_GRAPH_MSG1}', 'graph'],
-                        ['%{BKY_PRINT_MSG1}', 'print'],
+                        ['%{BKY_ALPHA_OPTION}', 'alpha'],
+                        ['%{BKY_DIGIT_OPTION}', 'digit'],
+                        ['%{BKY_ALNUM_OPTION}', 'alnum'],
+                        ['%{BKY_XDIGIT_OPTION}', 'xdigit'],
+                        ['%{BKY_PUNCT_OPTION}', 'punct'],
+                        ['%{BKY_SPACE_OPTION}', 'space'],
+                        ['%{BKY_BLANK_OPTION}', 'blank'],
+                        ['%{BKY_CNTRL_OPTION}', 'cntrl'],
+                        ['%{BKY_LOWER_OPTION}', 'lower'],
+                        ['%{BKY_UPPER_OPTION}', 'upper'],
+                        ['%{BKY_GRAPH_OPTION}', 'graph'],
+                        ['%{BKY_PRINT_OPTION}', 'print'],
                 ]})
                 .addConnections(parser);
             break;
@@ -600,16 +600,15 @@ Config.createBlock = function(setup) {
                 .addInput(0, {type:'field_number',value:1})
                 .addInput(0, {type:'field_number',value:3})
                 .setOutput('integer_input')
-                .setExtensions(['onchange_stack', 'onchange_get_parent_colour']);
             break;
 
         case 'repeat':
             this.jbb
                 .addConnections(parser)
                 .addInput(0, {type:'field_dropdown', options: [
-                    ['%{BKY_REPEAT_EXACTLY_MSG1}', 'exactly'],
-                    ['%{BKY_REPEAT_MIN_MSG1}', 'min'],
-                    ['%{BKY_REPEAT_MAX_MSG1}', 'max'],
+                    ['%{BKY_REPEAT_EXACTLY_OPTION}', 'exactly'],
+                    ['%{BKY_REPEAT_MIN_OPTION}', 'min'],
+                    ['%{BKY_REPEAT_MAX_OPTION}', 'max'],
                 ]})
                 .addInput(0, {type:"field_number", value:2},'%% %message%')
                 .addInput(1, {type:"input_statement", check:"parser"},'%%')
@@ -630,9 +629,9 @@ Config.createBlock = function(setup) {
                 .addConnections(parser)
                 .addInput(0, {type:'field_dropdown',
                     options: [
-                        ['%{BKY_LITTLE_ENDIAN_MSG1}', 'little_'],
-                        ['%{BKY_NATIVE_ENDIAN_MSG1}', ''],
-                        ['%{BKY_BIG_ENDIAN_MSG1}', 'big_'],
+                        ['%{BKY_LITTLE_ENDIAN_OPTION}', 'little_'],
+                        ['%{BKY_NATIVE_ENDIAN_OPTION}', ''],
+                        ['%{BKY_BIG_ENDIAN_OPTION}', 'big_'],
                 ]}, '%message% %%')
                 .addInput(0,{type:'input_value', check:['binary_input', 'binary_all']}, '%%')
             break;
@@ -701,6 +700,7 @@ Config.getBlocks = function() {
 //            }
         }
     }
+    console.log('Extensions in use: ', this.extensions);
     return json;
 }
 
@@ -714,17 +714,23 @@ Config.setupMessages = function() {
     // into `Blockly.Msg`.
     // TODO: Clean up the message files so this is done explicitly instead of
     // through this for-loop.
-    var addBlockMessage = function(mkey, topic) {
-        key = mkey.substr(5);
-        len = key.length-topic.length;
-        if (key.indexOf(topic) === len) {
-            key = key.substr(0,len).toUnderScore().toUpperCase() + '_' + topic.toUpperCase();
+    var addMessage = function(mkey, prefix, topic) {
+        key = mkey.substr(prefix.length);
+        len = key.length - topic[0].length - topic[1];
+        if (key.indexOf(topic[0]) === len) {
+            key = key.substr(0,len).toUnderScore().toUpperCase() + '_' + key.substr(len).toUpperCase();
             Blockly.Msg[key] = MSG[mkey];
             console.log(key);
             return true;
         }
         return false;
     }
+
+    var topics = [
+        ['Tooltip', 0],
+        ['HelpUrl', 0],
+        ['Msg', 1]
+    ];
 
     for (var messageKey in MSG) {
         if (messageKey.indexOf('cat') == 0) {
@@ -736,29 +742,13 @@ Config.setupMessages = function() {
                 Blockly.Msg[messageKey.toUpperCase()] = MSG[messageKey];
             }
         } else if (messageKey.indexOf('block') == 0) {
-            if (addBlockMessage(messageKey, 'Tooltip')) {
-                continue;
-            };
-            if (addBlockMessage(messageKey, 'HelpUrl')) {
-                continue;
-            };
-            if (addBlockMessage(messageKey, 'Title')) {
-                continue;
+            for (topic of topics) {
+                if (addMessage(messageKey, 'block', topic)) {
+                    continue;
+                };
             }
-            // todo: ouchn
-            if (addBlockMessage(messageKey, 'Msg1')) {
-                continue;
-            }
-            if (addBlockMessage(messageKey, 'Msg2')) {
-                continue;
-            }
-            if (addBlockMessage(messageKey, 'Msg3')) {
-                continue;
-            }
-            if (addBlockMessage(messageKey, 'Msg4')) {
-                continue;
-            }
-            if (addBlockMessage(messageKey, 'Msg5')) {
+        } else if (messageKey.indexOf('dropdown') == 0) {
+            if (addMessage(messageKey, 'dropdown', ['Option', 0])) {
                 continue;
             }
         }
