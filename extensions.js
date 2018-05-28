@@ -26,6 +26,131 @@ Extensions.extensions = {
     Blockly.PHP[this.type] = Generator.generators.php[this.generator];
   },
 
+  // for debugging purposes
+  'onchange_log_event': function() {
+    Extensions.addChangeHandler(this, function(changeEvent) {
+      console.log(changeEvent.toJson());
+    });
+  },
+
+  // this extension generates the dropdown entries for the reference block
+  'reference_dropdown': function(){
+
+    var dropdown = new Blockly.FieldDropdown(dynamicReferenceOptions);
+    this.inputList[1].appendField(dropdown, 'PARAM1');
+
+  },
+  // this extension handles name changes for rule and grammar blocks
+  'onchange_name_handler': function() {
+    var that = this;
+    Extensions.addChangeHandler(this, function(changeEvent) {
+
+      var blockName = that.getFieldValue('PARAM1');
+      var eventType = changeEvent.type; //Blockly.Events.CREATE
+      var blockID = that.id;
+      var eventID = changeEvent.blockId;
+
+      if (blockID == eventID) {
+        //debugger;
+        switch(eventType){
+
+        case Blockly.Events.CREATE:
+          //check if blockname already exists
+          if (parserNames.length>0){
+            if (parserNames.includes(blockName)){
+              while(parserNames.includes(blockName)){
+
+                //compute new blockName
+                var i = 1;
+                var nameEnding  = blockName.substring(blockName.length - i);
+                var lastNumber = 1;
+                while(!isNaN(parseInt(nameEnding))){
+                  lastNumber = parseInt(nameEnding);
+                  i++;
+                  nameEnding  = blockName.substring(blockName.length - i);
+                }
+
+                var newName = blockName.substring(0,blockName.length - (i-1)) + (lastNumber + 1);
+                blockName = newName;
+
+
+              }
+              that.setFieldValue(newName, 'PARAM1');
+              if(!that.isInFlyout) parserNames.push(newName);
+
+            }else{
+              if(!that.isInFlyout) parserNames.push(blockName);
+            }
+          }else{
+            if(!that.isInFlyout) parserNames.push(blockName);
+          }
+          break;
+
+        case Blockly.Events.CHANGE:
+
+          if (parserNames.length>0 && !that.isInFlyout ){
+            var oldV = changeEvent.oldValue;
+            var newV = changeEvent.newValue;
+            if (oldV != newV){
+              if (parserNames.includes(oldV)){
+                var i= parserNames.indexOf(oldV);
+                parserNames.splice(i,1);
+              }
+              if (!parserNames.includes(newV)){
+                parserNames.push(newV);
+              }
+            }
+          }
+          //deletion is handled in workspace event listener
+        }
+      }
+      });
+  },
+
+  // this extension handles the rule / grammar names for new blocks in the menu
+//'oncreate_name_handler': function() {
+//
+//
+//  var blockName = this.getFieldValue('PARAM1');
+//
+//
+////debugger;
+//  //check if blockname already exists
+//  if (parserNames.length>0){
+//    if (parserNames.includes(blockName)){
+//      while(parserNames.includes(blockName)){
+//
+//        //compute new blockName
+//        var i = 1;
+//        var nameEnding  = blockName.substring(blockName.length - i);
+//        var lastNumber = 1;
+//        while(!isNaN(parseInt(nameEnding))){
+//          lastNumber = parseInt(nameEnding);
+//          i++;
+//          nameEnding  = blockName.substring(blockName.length - i);
+//        }
+//
+//        var newName = blockName.substring(0,blockName.length - (i-1)) + (lastNumber + 1);
+//        blockName = newName;
+//
+//
+//      }
+//      this.setFieldValue(newName, 'PARAM1');
+//
+//    }else{
+//      parserNames.push(blockName);
+//    }
+//  }else{
+//    parserNames.push(blockName);
+//  }
+//
+//},
+
+  //-------------------------------------------------------------------------
+  // usage examples not currently used in this project
+
+  // this extension generates the dropdown entries for the reference block
+
   'use_parent_tooltip': function() {
     var that = this;
     this.setTooltip(function() {
@@ -46,11 +171,6 @@ Extensions.extensions = {
     });
   },
 
-  'onchange_log_event': function() {
-    Extensions.addChangeHandler(this, function(changeEvent) {
-      console.log(changeEvent.toJson());
-    });
-  },
 
   // this extension depends on onchange-stack
   'onchange_set_parent_colour': function() {

@@ -388,7 +388,7 @@ var mxcParsec = (function($, undefined) {
 
     workspace.configureContextMenu = customContextMenuFn;
 
-    workspace.addChangeListener(mirrorEvent);
+    workspace.addChangeListener(onDeletionNameHandler);
 
     function mirrorEvent(event) {
       if (event.type == Blockly.Events.UI) { return; // Don't mirror UI events.
