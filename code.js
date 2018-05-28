@@ -2,14 +2,14 @@
  * bky-parsec Copyright 2018 maxence operations gmbh. All rights reserved.
  * http://www.maxence.de/
  */
-
 /**
  * Create a namespace for the application.
  */
-var mxcParsec = (function($, undefined) {
+var parserNames = [];
+
+var mxcParsec = (function(app, undefined) {
 
   'use strict';
-  var parserNames = [];
 
   var customContextMenuFn = function(options) {
     var option = {
@@ -36,11 +36,40 @@ var mxcParsec = (function($, undefined) {
   var LANGUAGE_RTL = ['ar', 'fa', 'he', 'lki'];
 
   /**
-   * Blockly's main workspace.
-   *
-   * @type {Blockly.WorkspaceSvg}
+   * Execute the user's var Just a quick and dirty eval. Catch infinite loops.
+   * Not currently used.
    */
-  var workspace = null;
+  var runJS = function() {
+    Blockly.JavaScript.INFINITE_LOOP_TRAP = '  checkTimeout();\n';
+    var timeouts = 0;
+    var checkTimeout = function() {
+      if (timeouts++ > 1000000) {
+        throw MSG['timeout'];
+      }
+    };
+    var code = Blockly.JavaScript.workspaceToCode(workspace);
+    Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
+    try {
+      eval(code);
+    } catch (e) {
+      alert(MSG['badcode'].replace('%1', e));
+    }
+  };
+
+  /**
+   * Discard all blocks from the workspace.
+   */
+  var discard = function() {
+    var count = workspace.getAllBlocks().length;
+    if (count < 2 ||
+      window.confirm(Blockly.Msg.DELETE_ALL_BLOCKS
+        .replace('%1', count))) {
+      workspace.clear();
+      if (window.location.hash) {
+        window.location.hash = '';
+      }
+    }
+  };
 
   /**
    * Extracts a parameter from the URL. If the parameter is absent default_value
@@ -54,8 +83,8 @@ var mxcParsec = (function($, undefined) {
    */
   var getStringParamFromUrl = function(name, defaultValue) {
     var val = location.search.match(new RegExp('[?&]' + name + '=([^&]+)'));
-    return val ? demxcParsecURIComponent(val[1].replace(/\+/g, '%20'))
-            : defaultValue;
+    return val ? decodeURIComponent(val[1].replace(/\+/g, '%20')) :
+      defaultValue;
   };
 
   /**
@@ -71,6 +100,13 @@ var mxcParsec = (function($, undefined) {
     }
     return lang;
   };
+
+  /**
+   * Blockly's main workspace.
+   *
+   * @type {Blockly.WorkspaceSvg}
+   */
+   app.workspace = null;
 
   /**
    * Is the current language (var LANG) an RTL language?
@@ -127,7 +163,7 @@ var mxcParsec = (function($, undefined) {
     }
 
     var languageMenu = document.getElementById('languageMenu');
-    var newLang = enmxcParsecURIComponent(languageMenu.options[languageMenu.selectedIndex].value);
+    var newLang = encodeURIComponent(languageMenu.options[languageMenu.selectedIndex].value);
     var search = window.location.search;
     if (search.length <= 1) {
       search = '?lang=' + newLang;
@@ -137,8 +173,8 @@ var mxcParsec = (function($, undefined) {
       search = search.replace(/\?/, '?lang=' + newLang + '&');
     }
 
-    window.location = window.location.protocol + '//' + window.location.host
-            + window.location.pathname + search;
+    window.location = window.location.protocol + '//' + window.location.host +
+      window.location.pathname + search;
   };
 
   /**
@@ -164,9 +200,9 @@ var mxcParsec = (function($, undefined) {
   var importPrettify = function() {
     var script = document.createElement('script');
     script
-            .setAttribute(
-                    'src',
-                    'https://cdn.rawgit.com/google/mxcParsec-prettify/master/loader/run_prettify.js');
+      .setAttribute(
+        'src',
+        'https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js');
     document.head.appendChild(script);
   };
 
@@ -245,7 +281,7 @@ var mxcParsec = (function($, undefined) {
     }
 
     if (document.getElementById('tab_blocks').className == 'tabon') {
-      workspace.setVisible(false);
+      app.workspace.setVisible(false);
     }
     // Deselect all tabs and hide all panes.
     for (var i = 0; i < TABS_.length; i++) {
@@ -261,9 +297,9 @@ var mxcParsec = (function($, undefined) {
     document.getElementById('content_' + clickedName).style.visibility = 'visible';
     renderContent();
     if (clickedName == 'blocks') {
-      workspace.setVisible(true);
+      app.workspace.setVisible(true);
     }
-    Blockly.svgResize(workspace);
+    Blockly.svgResize(app.workspace);
   };
 
   /**
@@ -285,14 +321,14 @@ var mxcParsec = (function($, undefined) {
   };
 
   /**
-   * Attempt to generate the mxcParsec and display it in the UI, pretty printed.
+   * Attempt to generate the code and display it in the UI, pretty printed.
    *
    * @param generator
    *          {!Blockly.Generator} The generator to use.
    * @param prettyPrintType
    *          {string} The file type key for the pretty printer.
    */
-  var attemptmxcParsecGeneration = function(generator, prettyPrintType) {
+  var attemptCodeGeneration = function(generator, prettyPrintType) {
     var content = document.getElementById('content_' + selected);
     content.textContent = '';
     if (checkAllGeneratorFunctionsDefined(generator)) {
@@ -328,10 +364,10 @@ var mxcParsec = (function($, undefined) {
 
     var valid = missingBlockGenerators.length == 0;
     if (!valid) {
-      var msg = 'The generator mxcParsec for the following blocks not specified for '
-              + generator.name_
-              + ':\n - '
-              + missingBlockGenerators.join('\n - ');
+      var msg = 'The generator code for the following blocks not specified for ' +
+        generator.name_ +
+        ':\n - ' +
+        missingBlockGenerators.join('\n - ');
       console.log(msg);
     }
     return true;
@@ -359,9 +395,9 @@ var mxcParsec = (function($, undefined) {
         el.style.width = (2 * bBox.width - el.offsetWidth) + 'px';
       }
       // Make the 'Blocks' tab line up with the toolbox.
-      if (workspace && workspace.toolbox_.width) {
-        document.getElementById('tab_blocks').style.minWidth = (workspace.toolbox_.width - 38)
-                + 'px';
+      if (app.workspace && app.workspace.toolbox_.width) {
+        document.getElementById('tab_blocks').style.minWidth = (app.workspace.toolbox_.width - 38) +
+          'px';
         // Account for the 19 pixel margin and on each side.
       }
     };
@@ -371,7 +407,7 @@ var mxcParsec = (function($, undefined) {
 
     Blockly.defineBlocksWithJsonArray(config.blocks);
     var toolboxXml = Blockly.Xml.textToDom(config.toolbox);
-    workspace = Blockly.inject('content_blocks', {
+    app.workspace = Blockly.inject('content_blocks', {
       grid: {
         spacing: 25,
         length: 3,
@@ -387,55 +423,46 @@ var mxcParsec = (function($, undefined) {
       }
     });
 
-// corrects parserNames Array if a rule or grammar block is deleted
-  function onDeletionNameHandler(event){
-	   if (event.type == Blockly.Events.DELETE){
-	    	
-	    	var parser = new DOMParser();
-	    	
-	    	var blockXML = event.oldXml.outerHTML;
-	    	var doc = parser.parseFromString(blockXML,"text/html");
-	    	var blockHtml = doc.getElementsByTagName("block");
-	    	var blockType = blockHtml[0].getAttribute("type");
-	    	
-	    	if (blockType == "rule_type" || blockType == "grammar_type"){
-	    		var blockField = blockHtml[0].children[0];
-	    		var blockName = blockField.innerHTML;
-	    		if (parserNames.includes(blockName)){
-					var i= parserNames.indexOf(blockName);
-					parserNames.splice(i,1);
-				}
-	    	}
-	    	
-	    	if (blockType == "reference_type"){
-	    		debugger;
-	    		var allTopBlocks = Code.workspace.getTopBlocks(false);
-	    		
-	    		var blockField = blockHtml[0].children[0];
-	    		var blockName = blockField.innerHTML;
-	    		
-				for(var topBlock of allTopBlocks){
-					var topBlockName = topBlock.getFieldValue('PARAM1');
+    // corrects parserNames Array if a rule or grammar block is deleted
+    function onDeletionNameHandler(event) {
+      if (event.type == Blockly.Events.DELETE) {
 
-					if (topBlockName == blockName){
-						makeBlockDeletable(topBlock);
-					}
+        var parser = new DOMParser();
 
-				}
-	    	}
-	    }
-  }    
+        var blockXML = event.oldXml.outerHTML;
+        var doc = parser.parseFromString(blockXML, "text/html");
+        var blockHtml = doc.getElementsByTagName("block");
+        var blockType = blockHtml[0].getAttribute("type");
 
-    workspace.configureContextMenu = customContextMenuFn;
+        if (blockType == "rule_type" || blockType == "grammar_type") {
+          var blockField = blockHtml[0].children[0];
+          var blockName = blockField.innerHTML;
+          if (parserNames.includes(blockName)) {
+            var i = parserNames.indexOf(blockName);
+            parserNames.splice(i, 1);
+          }
+        }
 
-    workspace.addChangeListener(onDeletionNameHandler);
+        if (blockType == "reference_type") {
+          debugger;
+          var allTopBlocks = app.workspace.getTopBlocks(false);
 
-    function mirrorEvent(event) {
-      if (event.type == Blockly.Events.UI) { return; // Don't mirror UI events.
+          var blockField = blockHtml[0].children[0];
+          var blockName = blockField.innerHTML;
+
+          for (var topBlock of allTopBlocks) {
+            var topBlockName = topBlock.getFieldValue('PARAM1');
+
+            if (topBlockName == blockName) {
+              makeBlockDeletable(topBlock);
+            }
+          }
+        }
       }
-      var json = event.toJson();
-      // console.log(json);
     }
+
+    app.workspace.configureContextMenu = customContextMenuFn;
+    app.workspace.addChangeListener(onDeletionNameHandler);
 
     // Register only the extensions actually used by blocks
     Extensions.init(config.extensions);
@@ -443,7 +470,7 @@ var mxcParsec = (function($, undefined) {
 
     if ('BlocklyStorage' in window) {
       // Hook a save function onto unload.
-      BlocklyStorage.backupOnUnload(workspace);
+      BlocklyStorage.backupOnUnload(app.workspace);
     }
 
     tabClick(selected);
@@ -476,7 +503,7 @@ var mxcParsec = (function($, undefined) {
       }(name));
     }
     onresize();
-    Blockly.svgResize(workspace);
+    Blockly.svgResize(app.workspace);
 
     // Lazy-load the syntax-highlighting.
     window.setTimeout(importPrettify, 1);
@@ -493,7 +520,7 @@ var mxcParsec = (function($, undefined) {
 
     // Sort languages alphabetically.
     var languages = [];
-    for ( var lang in LANGUAGE_NAME) {
+    for (var lang in LANGUAGE_NAME) {
       languages.push([LANGUAGE_NAME[lang], lang]);
     }
     var comp = function(a, b) {
@@ -527,62 +554,35 @@ var mxcParsec = (function($, undefined) {
     document.getElementById('trashButton').title = MSG['trashTooltip'];
   };
 
-  /**
-   * Execute the user's var Just a quick and dirty eval. Catch infinite loops.
-   * Not currently used.
-   */
-  var runJS = function() {
-    Blockly.JavaScript.INFINITE_LOOP_TRAP = '  checkTimeout();\n';
-    var timeouts = 0;
-    var checkTimeout = function() {
-      if (timeouts++ > 1000000) { throw MSG['timeout']; }
-    };
-    var mxcParsec = Blockly.JavaScript.workspaceTomxcParsec(workspace);
-    Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
-    try {
-      eval(mxcParsec);
-    } catch (e) {
-      alert(MSG['badmxcParsec'].replace('%1', e));
+  app.dynamicReferenceOptions = function() {
+    var options = [];
+    for (var option of parserNames) {
+      options.push([option, option]);
     }
-  };
+    if (parserNames.length == 0) {
+      options = [
+        ['please create a parser first', 'error']
+      ];
+    }
+    return options;
+  }
 
-  /**
-   * Discard all blocks from the workspace.
-   */
-  var discard = function() {
-    var count = workspace.getAllBlocks().length;
-    if (count < 2
-            || window.confirm(Blockly.Msg.DELETE_ALL_BLOCKS
-                    .replace('%1', count))) {
-      workspace.clear();
-      if (window.location.hash) {
-        window.location.hash = '';
-      }
-    }
-  };
-  // Load the mxcParsec demo's language strings.
+  //mxParsec.workspace.addChangeListener(checkForDeletion);
+  //Blockly.workspace.addChangeListener(checkForDeletion);
+  app.checkForDeletion = function() {
+    var test = this;
+  }
+
+  // Load the cpde demo's language strings.
   document.write('<script src="msg/' + LANG + '.js"></script>\n');
   // Load Blockly's language strings.
   document.write('<script src="../../msg/js/' + LANG + '.js"></script>\n');
   window.addEventListener('load', init);
-function dynamicReferenceOptions() {
-	var options = [];
-	for(var option of parserNames){
-		options.push([option,option]);
-	}
-	if (parserNames.length ==0){
-		options =[['please create a parser first','error']];
-	}
-	  return options;
-}
 
-  return $;
-})(mxcParsec = mxcParsec || {});
+  return app;
+
+})(mxcParsec || {});
+
+
 
 console.log('Here we go: ', mxcParsec);
-
-//Code.workspace.addChangeListener(checkForDeletion);
-//Blockly.workspace.addChangeListener(checkForDeletion);
-function checkForDeletion() {
-	var test = this;
-}
