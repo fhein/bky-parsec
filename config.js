@@ -42,19 +42,19 @@ var Config = (function(Config, mxcParsec, undefined) {
           "name": "rule"
         },
         {
-          "type": "grammar_type",
-          "proto": "grammar",
-          "generator": "grammar",
-          "data": "grammar",
-          "name": "grammar"
-        },
-        {
-          "type": "reference_type",
-          "proto": "reference",
-          "generator": "single_text_field",
-          "data": "reference",
-          "name": "reference"
-        }
+            "type": "grammar_type",
+            "proto": "grammar",
+            "generator": "grammar",
+            "data": "grammar",
+            "name": "grammar"
+          },
+          {
+            "type": "reference_type",
+            "proto": "reference",
+            "generator": "single_text_field",
+            "data": "reference",
+            "name": "reference"
+          }
       ]
     },
     {},
@@ -764,7 +764,7 @@ var Config = (function(Config, mxcParsec, undefined) {
         jbb
           .addConnections('reference')
           .addInput(0, {type:'input_dummy'})
-          .setExtensions(['reference_dropdown', 'makeParserUndeletable']);
+          .setExtensions(['reference_dropdown', 'handleTopBlockDeletions']);
         break;
 
       default:
