@@ -58,7 +58,6 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
 
       // this extension generates the dropdown entries for the reference block
       'reference_dropdown': function() {
-        console.log(mxcParsec);
         var dropdown = new Blockly.FieldDropdown(mxcParsec.dynamicReferenceOptions);
         this.inputList[0].appendField(dropdown, 'PARAM1');
 
@@ -262,4 +261,4 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
 
   })(Extensions || {}, mxcParsec);
 
-console.log(Extensions);
+console.log('Public interface of Extensions:', Extensions);

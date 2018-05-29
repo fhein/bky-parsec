@@ -11,7 +11,14 @@ var mxcParsec = (function(app, undefined) {
 
   'use strict';
 
-  var customContextMenuFn = function(options) {
+  /**
+   * Blockly's main workspace.
+   *
+   * @type {Blockly.WorkspaceSvg}
+   */
+   app.workspace = null;
+
+   var customContextMenuFn = function(options) {
     var option = {
       enabled: true,
       text: "Custom option",
@@ -60,11 +67,13 @@ var mxcParsec = (function(app, undefined) {
    * Discard all blocks from the workspace.
    */
   var discard = function() {
-    var count = workspace.getAllBlocks().length;
-    if (count < 2 ||
-      window.confirm(Blockly.Msg.DELETE_ALL_BLOCKS
-        .replace('%1', count))) {
-      workspace.clear();
+    var blocks = app.workspace.getAllBlocks();
+    var count = blocks.length;
+    if (count < 2 || window.confirm(Blockly.Msg.DELETE_ALL_BLOCKS.replace('%1', count))) {
+      for (var block of blocks) {
+        block.setDeletable(true);
+      }
+      app.workspace.clear();
       if (window.location.hash) {
         window.location.hash = '';
       }
@@ -102,13 +111,6 @@ var mxcParsec = (function(app, undefined) {
   };
 
   /**
-   * Blockly's main workspace.
-   *
-   * @type {Blockly.WorkspaceSvg}
-   */
-   app.workspace = null;
-
-  /**
    * Is the current language (var LANG) an RTL language?
    *
    * @return {boolean} True if RTL, false if LTR.
@@ -138,11 +140,11 @@ var mxcParsec = (function(app, undefined) {
       // Language switching stores the blocks during the reload.
       delete window.sessionStorage.loadOnceBlocks;
       var xml = Blockly.Xml.textToDom(loadOnce);
-      Blockly.Xml.domToWorkspace(xml, workspace);
+      Blockly.Xml.domToWorkspace(xml, app.workspace);
     } else if (defaultXml) {
       // Load the editor with default starting blocks.
       var xml = Blockly.Xml.textToDom(defaultXml);
-      Blockly.Xml.domToWorkspace(xml, workspace);
+      Blockly.Xml.domToWorkspace(xml, app.workspace);
     } else if ('BlocklyStorage' in window) {
       // Restore saved blocks in a separate thread so that subsequent
       // initialization is not affected from a failed load.
@@ -157,7 +159,7 @@ var mxcParsec = (function(app, undefined) {
     // Store the blocks for the duration of the reload.
     // MSIE 11 does not support sessionStorage on file:// URLs.
     if (window.sessionStorage) {
-      var xml = Blockly.Xml.workspaceToDom(workspace);
+      var xml = Blockly.Xml.workspaceToDom(app.workspace);
       var text = Blockly.Xml.domToText(xml);
       window.sessionStorage.loadOnceBlocks = text;
     }
@@ -275,8 +277,8 @@ var mxcParsec = (function(app, undefined) {
         }
       }
       if (xmlDom) {
-        workspace.clear();
-        Blockly.Xml.domToWorkspace(xmlDom, workspace);
+        app.workspace.clear();
+        Blockly.Xml.domToWorkspace(xmlDom, app.workspace);
       }
     }
 
@@ -291,7 +293,7 @@ var mxcParsec = (function(app, undefined) {
     }
 
     // Select the active tab.
-    var selected = clickedName;
+    selected = clickedName;
     document.getElementById('tab_' + clickedName).className = 'tabon';
     // Show the selected pane.
     document.getElementById('content_' + clickedName).style.visibility = 'visible';
@@ -311,7 +313,7 @@ var mxcParsec = (function(app, undefined) {
     // Initialize the pane.
     if (content.id == 'content_xml') {
       var xmlTextarea = document.getElementById('content_xml');
-      var xmlDom = Blockly.Xml.workspaceToDom(workspace);
+      var xmlDom = Blockly.Xml.workspaceToDom(app.workspace);
       var xmlText = Blockly.Xml.domToPrettyText(xmlDom);
       xmlTextarea.value = xmlText;
       xmlTextarea.focus();
@@ -332,7 +334,7 @@ var mxcParsec = (function(app, undefined) {
     var content = document.getElementById('content_' + selected);
     content.textContent = '';
     if (checkAllGeneratorFunctionsDefined(generator)) {
-      var code = generator.workspaceToCode(workspace);
+      var code = generator.workspaceToCode(app.workspace);
 
       content.textContent = code;
       if (typeof PR.prettyPrintOne == 'function') {
@@ -350,7 +352,7 @@ var mxcParsec = (function(app, undefined) {
    *          {!Blockly.Generator} The generator to use.
    */
   var checkAllGeneratorFunctionsDefined = function(generator) {
-    var blocks = workspace.getAllBlocks();
+    var blocks = app.workspace.getAllBlocks();
     var missingBlockGenerators = [];
     for (var i = 0; i < blocks.length; i++) {
       var blockType = blocks[i].type;
@@ -444,7 +446,6 @@ var mxcParsec = (function(app, undefined) {
         }
 
         if (blockType == "reference_type") {
-          debugger;
           var allTopBlocks = app.workspace.getTopBlocks(false);
 
           var blockField = blockHtml[0].children[0];
@@ -488,7 +489,7 @@ var mxcParsec = (function(app, undefined) {
       BlocklyStorage['HASH_ERROR'] = MSG['hashError'];
       BlocklyStorage['XML_ERROR'] = MSG['xmlError'];
       bindClick(linkButton, function() {
-        BlocklyStorage.link(workspace);
+        BlocklyStorage.link(app.workspace);
       });
     } else if (linkButton) {
       linkButton.className = 'disabled';
@@ -585,4 +586,4 @@ var mxcParsec = (function(app, undefined) {
 
 
 
-console.log('Here we go: ', mxcParsec);
+console.log('Public interface of mxcParsec: ', mxcParsec);

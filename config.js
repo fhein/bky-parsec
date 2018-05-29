@@ -909,4 +909,4 @@ var Config = (function(Config, mxcParsec, undefined) {
   return Config;
 })(Config || {}, mxcParsec);
 
-console.log('Config: ', Config);
+console.log('Public Interface of Config: ', Config);
