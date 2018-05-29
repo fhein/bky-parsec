@@ -1,29 +1,29 @@
 var Extensions = (function(Extensions, mxcParsec, undefined) {
 
 
-  var makeParserDeletable = function(block) {
-    if (block.type == "rule_type" || block.type == "grammar_type") {
-      block.referenceCount--;
-      if (block.referenceCount == 0) {
-        block.setDeletable(true);
+    var makeParserDeletable = function(block) {
+        if (block.type == "rule_type" || block.type == "grammar_type") {
+          block.referenceCount--;
+          if (block.referenceCount == 0) {
+            block.setDeletable(true);
+          }
+          return true;
+        }
+        return false;
       }
-      return true;
-    }
-    return false;
-  }
 
-  var makeParserUndeletable = function (block) {
-    if (block.type == "rule_type" || block.type == "grammar_type") {
-      block.setDeletable(false);
-      if (block.referenceCount != undefined) {
-        block.referenceCount++;
-      } else {
-        block.referenceCount = 1;
+      var makeParserUndeletable = function (block) {
+        if (block.type == "rule_type" || block.type == "grammar_type") {
+          block.setDeletable(false);
+          if (block.referenceCount != undefined) {
+            block.referenceCount++;
+          } else {
+            block.referenceCount = 1;
+          }
+          return true;
+        }
+        return false;
       }
-      return true;
-    }
-    return false;
-  }
 
   var addChangeHandler = function(block, handler) {
     if (!block.changeStack) {
@@ -63,33 +63,32 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
 
       },
       // this extension makes sure that referenced grammars/rules can't be deleted
-      'makeParserUndeletable': function() {
+      'handleTopBlockDeletions': function() {
         var that = this;
         addChangeHandler(this, function(changeEvent) {
-          var test = that;
           var blockName = that.getFieldValue('PARAM1');
           var eventType = changeEvent.type; //Blockly.Events.CREATE
           var blockID = that.id;
           var eventID = changeEvent.blockId;
 
-          if (blockID == eventID) {
+          
+          if (blockID == eventID && that.isInFlyout == false) {
             if (eventType == Blockly.Events.CREATE || eventType == Blockly.Events.CHANGE) {
 
               var allTopBlocks = mxcParsec.workspace.getTopBlocks(false);
 
               for (var topBlock of allTopBlocks) {
-
-                var result = makeParserDeletable(topBlock);
-                //                      var topBlockName = topBlock.getFieldValue('PARAM1');
-                //                      if (topBlockName == blockName){
-                //                        makeBlockUndeletable(topBlock);
-                //                      }
-                //                      if (eventType ==Blockly.Events.CHANGE){
-                //                        var oldV = changeEvent.oldValue;
-                //                        if (topBlockName == oldV){
-                //                          makeBlockDeletable(topBlock);
-                //                        }
-                //                      }
+            	  //var result = makeParserDeletable(topBlock);
+            	  var topBlockName = topBlock.getFieldValue('PARAM1');
+            	  if (topBlockName == blockName){
+            		  makeParserUndeletable(topBlock);
+            	  }
+            	  if (eventType ==Blockly.Events.CHANGE){
+            		  var oldV = changeEvent.oldValue;
+            		  if (topBlockName == oldV){
+            			  makeParserDeletable(topBlock);
+            		  }
+            	  }
               }
             }
           }
@@ -106,8 +105,7 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
           var eventID = changeEvent.blockId;
 
           if (blockID == eventID) {
-            //debugger;
-            switch (eventType) {
+             switch (eventType) {
 
               case Blockly.Events.CREATE:
                 //check if blockname already exists

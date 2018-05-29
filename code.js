@@ -473,13 +473,20 @@ var mxcParsec = (function(app, undefined) {
             var topBlockName = topBlock.getFieldValue('PARAM1');
 
             if (topBlockName == blockName) {
-              makeBlockDeletable(topBlock);
+            	if (topBlock.type == "rule_type" || topBlock.type == "grammar_type") {
+            		topBlock.referenceCount--;
+            		if (topBlock.referenceCount == 0) {
+            			topBlock.setDeletable(true);
+            		}
+            	}
             }
           }
         }
       }
     }
 
+
+      
     app.workspace.configureContextMenu = customContextMenuFn;
     app.workspace.addChangeListener(onDeletionNameHandler);
 
