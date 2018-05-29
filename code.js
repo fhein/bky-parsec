@@ -567,7 +567,7 @@ var mxcParsec = (function(app, undefined) {
     }
     return options;
   }
-
+  
   //mxParsec.workspace.addChangeListener(checkForDeletion);
   //Blockly.workspace.addChangeListener(checkForDeletion);
   app.checkForDeletion = function() {
