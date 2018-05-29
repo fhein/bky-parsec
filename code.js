@@ -584,6 +584,4 @@ var mxcParsec = (function(app, undefined) {
 
 })(mxcParsec || {});
 
-
-
 console.log('Public interface of mxcParsec: ', mxcParsec);
