@@ -1,6 +1,8 @@
 var Extensions = (function(Extensions, mxcParsec, undefined) {
 
-
+    /**
+     * rule or grammar can be delteted if all references have been removed
+     */
     var setParserDeletable = function(block) {
         if (block.type == "rule_type" || block.type == "grammar_type") {
           block.referenceCount--;
@@ -11,7 +13,10 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
         }
         return false;
       }
-
+    
+    /**
+     * rule or grammar cannot be delteted if a reference exists
+     */
       var setParserUndeletable = function (block) {
         if (block.type == "rule_type" || block.type == "grammar_type") {
           block.setDeletable(false);
@@ -67,7 +72,7 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
         var that = this;
         addChangeHandler(this, function(changeEvent) {
           var blockName = that.getFieldValue('PARAM1');
-          var eventType = changeEvent.type; //Blockly.Events.CREATE
+          var eventType = changeEvent.type; 
           var blockID = that.id;
           var eventID = changeEvent.blockId;
 
