@@ -486,7 +486,6 @@ var mxcParsec = (function(app, undefined) {
     }
 
 
-      
     app.workspace.configureContextMenu = customContextMenuFn;
     app.workspace.addChangeListener(onDeletionNameHandler);
 
