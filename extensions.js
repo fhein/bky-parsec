@@ -1,7 +1,7 @@
 var Extensions = (function(Extensions, mxcParsec, undefined) {
 
 
-    var makeParserDeletable = function(block) {
+    var setParserDeletable = function(block) {
         if (block.type == "rule_type" || block.type == "grammar_type") {
           block.referenceCount--;
           if (block.referenceCount == 0) {
@@ -12,7 +12,7 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
         return false;
       }
 
-      var makeParserUndeletable = function (block) {
+      var setParserUndeletable = function (block) {
         if (block.type == "rule_type" || block.type == "grammar_type") {
           block.setDeletable(false);
           if (block.referenceCount != undefined) {
@@ -78,15 +78,15 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
               var allTopBlocks = mxcParsec.workspace.getTopBlocks(false);
 
               for (var topBlock of allTopBlocks) {
-            	  //var result = makeParserDeletable(topBlock);
+            	  //var result = setParserDeletable(topBlock);
             	  var topBlockName = topBlock.getFieldValue('PARAM1');
             	  if (topBlockName == blockName){
-            		  makeParserUndeletable(topBlock);
+            		  setParserUndeletable(topBlock);
             	  }
             	  if (eventType ==Blockly.Events.CHANGE){
             		  var oldV = changeEvent.oldValue;
             		  if (topBlockName == oldV){
-            			  makeParserDeletable(topBlock);
+            			  setParserDeletable(topBlock);
             		  }
             	  }
               }
