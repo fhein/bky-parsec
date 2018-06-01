@@ -335,8 +335,8 @@ var mxcParsec = (function(app, undefined) {
     content.textContent = '';
     if (checkAllGeneratorFunctionsDefined(generator)) {
       var code = generator.workspaceToCode(app.workspace);
-
-      content.textContent = code;
+      // remove all trailing commas because JSON does not allow them
+      content.textContent = code.replace(/\,(?!\s*?[\{\[\"\'\w])/g, '');
       if (typeof PR.prettyPrintOne == 'function') {
         code = content.textContent;
         code = PR.prettyPrintOne(code, prettyPrintType);
