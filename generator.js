@@ -111,16 +111,15 @@ Generator.generators = {
           break;
       }
       var subject = Blockly.PHP.statementToCode(block, 'PARAM3');
-      return '["' + block.data + '", [\n' + subject + Blockly.PHP.INDENT + min +
-        ', ' + max + '\n]],\n';
+      var code = '["' + block.data + '", [\n' + subject + Blockly.PHP.INDENT + min;
+      return '["' + block.data + '", [\n' + subject + Blockly.PHP.INDENT + min + ', ' + max + '\n]],\n';
     },
 
     'repeat_min_max': function(block) {
       var min = block.getFieldValue('PARAM1');
       var max = block.getFieldValue('PARAM2');
       var subject = Blockly.PHP.statementToCode(block, 'PARAM3');
-      return '["' + block.data + '", [\n' + subject + Blockly.PHP.INDENT + min +
-        ', ' + max + '\n]],\n';
+      return '["' + block.data + '", [\n' + subject + Blockly.PHP.INDENT + min + ', ' + max + '\n]],\n';
     },
 
     'integer': function(block) {
@@ -132,7 +131,7 @@ Generator.generators = {
     'rule': function(block) {
       var name = block.getFieldValue('PARAM1');
       var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
-      return '["' + block.data + '", [\n' + Blockly.PHP.INDENT + '"' + name +
+      return '"'+name+'":["' + block.data + '", [\n' + Blockly.PHP.INDENT + '"' + name +
         '",\n' + subject + ']],\n';
     },
     'grammar': function(block) {

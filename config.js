@@ -299,31 +299,6 @@ var Config = (function(Config, mxcParsec, undefined) {
     },
     {},
     {
-      "ref": "catBoolean",
-      "blocks": [{
-          "type": "bool_type",
-          "proto": "undone",
-          "generator": "undone",
-          "data": "bool",
-          "name": "bool"
-        },
-        {
-          "type": "true_type",
-          "generator": "no_argument",
-          "proto": "no_arguments",
-          "data": "true",
-          "name": "true"
-        },
-        {
-          "type": "false_type",
-          "generator": "no_argument",
-          "proto": "no_arguments",
-          "data": "false",
-          "name": "false"
-        }
-      ]
-    },
-    {
       "ref": "catInteger",
       "proto": "integer_select",
       "generator": "integer",
@@ -395,6 +370,27 @@ var Config = (function(Config, mxcParsec, undefined) {
           "generator": "integer_digits_input",
           "data": "char",
           "name": "integer_digits_input"
+        },
+        {
+          "type": "bool_type",
+          "proto": "undone",
+          "generator": "undone",
+          "data": "bool",
+          "name": "bool"
+        },
+        {
+          "type": "true_type",
+          "generator": "no_argument",
+          "proto": "no_arguments",
+          "data": "true",
+          "name": "true"
+        },
+        {
+          "type": "false_type",
+          "generator": "no_argument",
+          "proto": "no_arguments",
+          "data": "false",
+          "name": "false"
         },
       ]
     },
