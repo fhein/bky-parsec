@@ -297,39 +297,14 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "char_class",
           "name": "char_class"
         },
-        ]
-      },
-      {},
-      {
-        "ref": "catBoolean",
-        "blocks": [{
-          "type": "bool_type",
-          "proto": "undone",
-          "generator": "undone",
-          "data": "bool",
-          "name": "bool"
-        },
-        {
-          "type": "true_type",
-          "generator": "no_argument",
-          "proto": "no_arguments",
-          "data": "true",
-          "name": "true"
-        },
-        {
-          "type": "false_type",
-          "generator": "no_argument",
-          "proto": "no_arguments",
-          "data": "false",
-          "name": "false"
-        }
-        ]
-      },
-      {
-        "ref": "catInteger",
-        "proto": "integer_select",
-        "generator": "integer",
-        "blocks": [{
+      ]
+    },
+    {},
+    {
+      "ref": "catInteger",
+      "proto": "integer_select",
+      "generator": "integer",
+      "blocks": [{
           "type": "signed_integer_type",
           "proto": "single_integer_value",
           "shadow": "integerShadow",
@@ -398,14 +373,35 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "char",
           "name": "integer_digits_input"
         },
-        ]
-      },
-      {},
-      {
-        "ref": "catBinary",
-        "shadow": "binaryShadow",
-        "proto": "binary",
-        "blocks": [{
+        {
+          "type": "bool_type",
+          "proto": "undone",
+          "generator": "undone",
+          "data": "bool",
+          "name": "bool"
+        },
+        {
+          "type": "true_type",
+          "generator": "no_argument",
+          "proto": "no_arguments",
+          "data": "true",
+          "name": "true"
+        },
+        {
+          "type": "false_type",
+          "generator": "no_argument",
+          "proto": "no_arguments",
+          "data": "false",
+          "name": "false"
+        },
+      ]
+    },
+    {},
+    {
+      "ref": "catBinary",
+      "shadow": "binaryShadow",
+      "proto": "binary",
+      "blocks": [{
           "type": "byte_type",
           "proto": "binary_accept_all",
           "shadow": "byteShadow",
