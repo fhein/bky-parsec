@@ -78,12 +78,10 @@ var mxcParsec = (function(app, undefined) {
     }
     code = '{'+code+'}';
     // remove all trailing commas because json does not support them
-    console.log(code.replace(/\,(?=\s*?[\}\]])/g, ''));
     code = JSON.parse(code.replace(/\,(?=\s*?[\}\]])/g, ''));
 
     jsonRpc("parse",
             { "parser":code,
-              "skipper":["space",[]],
               "input":"bbbb"
             },
             function(status, response) {
