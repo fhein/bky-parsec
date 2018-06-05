@@ -484,13 +484,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "attr",
           "name": "attr"
         },
-        {
-          "type": "lazy_type",
-          "proto": "single_parser",
-          "generator": "single_parser",
-          "data": "lazy",
-          "name": "lazy"
-        },
+//        {
+//          "type": "lazy_type",
+//          "proto": "single_parser",
+//          "generator": "single_parser",
+//          "data": "lazy",
+//          "name": "lazy"
+//        },
         {
           "type": "advance_type",
           "proto": "single_number_field",

@@ -38,6 +38,9 @@ var mxcParsec = (function(app, undefined) {
       "method":method,
       "params":params
     };
+    if (params) {
+      body.params = params;
+    }
     var http = new XMLHttpRequest();
     http.open('POST', url, true);
     http.setRequestHeader('Content-Type', 'application/json');
@@ -73,10 +76,13 @@ var mxcParsec = (function(app, undefined) {
 
     jsonRpc("parse",
             { "parser":code,
-              "input":"bbbb"
+              "input":document.getElementById('inputText').value
             },
             function(status, response) {
                 console.log(response);
+                var result = JSON.parse(response).result;
+                var output = result ? 'Parsing successfully completed.\n' : 'Parsing failed.\n';
+                document.getElementById('output').value += output;
             }
     );
   };
@@ -606,7 +612,7 @@ var mxcParsec = (function(app, undefined) {
     var inputValue = inputText.value;
     //var innerHTML = inputText.innerHTML;
     var index = inputValue.indexOf(text);
-    if (index >= 0) { 
+    if (index >= 0) {
      var newValue = inputValue.substring(0,index) + "<span class='highlightSuccess'>" + inputValue.substring(index,index+text.length) + "</span>" + inputValue.substring(index + text.length);
      inputText.value = newValue;
     }
@@ -617,6 +623,13 @@ var mxcParsec = (function(app, undefined) {
   // Load Blockly's language strings.
   document.write('<script src="../../msg/js/' + LANG + '.js"></script>\n');
   window.addEventListener('load', init);
+
+  jsonRpc('getInput', [], function(status, response) {
+    if (status == 200) {
+      document.getElementById('inputText').value = JSON.parse(response).result;
+    }
+  });
+  document.getElementById('output').value = '';
 
   return app;
 
