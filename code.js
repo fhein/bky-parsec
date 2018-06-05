@@ -599,6 +599,19 @@ var mxcParsec = (function(app, undefined) {
     var test = this;
   }
 
+  //highlighting of input Text
+  app.highlightText = function(text) {
+    debugger;
+    var inputText = document.getElementById("inputText");
+    var inputValue = inputText.value;
+    //var innerHTML = inputText.innerHTML;
+    var index = inputValue.indexOf(text);
+    if (index >= 0) { 
+     var newValue = inputValue.substring(0,index) + "<span class='highlightSuccess'>" + inputValue.substring(index,index+text.length) + "</span>" + inputValue.substring(index + text.length);
+     inputText.value = newValue;
+    }
+  }
+
   // Load the cpde demo's language strings.
   document.write('<script src="msg/' + LANG + '.js"></script>\n');
   // Load Blockly's language strings.

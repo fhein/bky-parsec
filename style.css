@@ -162,3 +162,15 @@ button {
 .run {
   background-position: -42px 0px;
 }
+
+.highlightWarning {
+  background-color: yellow;
+}
+
+.highlightSuccess {
+  background-color: green;
+}
+
+.highlightError {
+  background-color: red;
+}
