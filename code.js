@@ -18,6 +18,15 @@ var mxcParsec = (function(app, undefined) {
    */
    app.workspace = null;
 
+   app.RESULT_SUCCESS = 0;
+   app.RESULT_WARNING = 1;
+   app.RESULT_ERROR = 2;
+
+   app.RESULT_CSS = [];
+   app.RESULT_CSS[app.RESULT_SUCCESS] = "highlightSuccess";
+   app.RESULT_CSS[app.RESULT_WARNING] = "highlightWarning";
+   app.RESULT_CSS[app.RESULT_ERROR] = "highlightError";
+
    var customContextMenuFn = function(options) {
     var option = {
       enabled: true,
@@ -580,19 +589,99 @@ var mxcParsec = (function(app, undefined) {
     var test = this;
   }
 
+  //step by step result
+  app.nextStep = function(){
+    
+    //[[["BlockID"],[[indexFrom,indexTo,HighlightColor]],["output"]],[[".e|DPX(6,*xX#7lvN71/"],[[0,1,1]],["T"]]]
+    
+    if (!app.resultStep) {
+      app.resultStep = 0;
+    }else{
+      app.removeHighlighting();
+    }
+    
+    if (app.resultStep<app.result.length){
+      var curStep = app.result[app.resultStep];
+      //highlight blocks
+      for (var blockID of curStep[0]) {
+        app.highlightBlock(blockID);
+      }
+      //Highlight Text
+      for (var textMarker of curStep[1]) {
+        app.highlightText(textMarker[0],textMarker[1],textMarker[2])
+      }
+
+      //write output to field
+      var parsecOutput = curStep[2];
+      var outputText = document.getElementById("outputText");
+      outputText.value = outputText.value + parsecOutput;
+
+      app.resultStep ++;
+  }
+
+  }
+
+
+  app.removeHighlighting = function(){
+    var prevStep = app.result[app.resultStep -1];
+
+    for (var blockID of prevStep[0]) {
+      app.unHighlightBlock(blockID);
+    }
+    
+    for (var textMarker of prevStep[1]) {
+      app.unHighlightText(textMarker[0]);
+    }
+
+  }
+
   //highlighting of input Text
-  app.highlightText = function(text) {
-    debugger;
+  app.highlightText = function (indexFrom, indexTo, highlightType) {
+
     var inputText = document.getElementById("inputText");
-    var inputValue = inputText.value;
-    //var innerHTML = inputText.innerHTML;
-    var index = inputValue.indexOf(text);
-    if (index >= 0) { 
-     var newValue = inputValue.substring(0,index) + "<span class='highlightSuccess'>" + inputValue.substring(index,index+text.length) + "</span>" + inputValue.substring(index + text.length);
-     inputText.value = newValue;
+    //var inputValue = inputText.value;
+
+    if(!app.resultIndexCorrection) app.resultIndexCorrection = 0;
+
+    indexFrom += app.resultIndexCorrection;
+    indexTo += app.resultIndexCorrection;
+
+    var inputValue = inputText.innerHTML;
+    if (indexTo >= 0 && indexTo > indexFrom) {
+      var newValue = inputValue.substring(0, indexFrom) + "<span class='"+ app.RESULT_CSS[highlightType] +"'>" + inputValue.substring(indexFrom, indexTo) + "</span>" + inputValue.substring(indexTo, inputValue.length);
+      inputText.innerHTML = newValue;
+    }
+    
+    app.resultIndexCorrection += (newValue.length - inputValue.length);
+  
+  }
+
+  app.unHighlightText = function(indexFrom) {
+
+    var inputText = document.getElementById("inputText");
+    //var inputValue = inputText.value;
+    var inputValue = inputText.innerHTML;
+    var indexStart1 = inputValue.indexOf("<span", indexFrom);
+    var indexEnd = inputValue.indexOf(">", indexFrom);
+    var indexStart2 = inputValue.indexOf("</span>", indexFrom);
+    if (indexStart1 == indexFrom) { 
+      var s1 = inputValue.substring(0,indexStart1);
+      var s2 = inputValue.substring(indexEnd + 1,indexStart2);
+      var s3= inputValue.substring(indexStart2 + 7, inputValue.length);
+     var newValue = s1 + s2 + s3;
+     inputText.innerHTML = newValue;
+
+     app.resultIndexCorrection += newValue.length - inputValue.length;
     }
   }
 
+  app.highlightBlock = function(id) {
+    app.workspace.highlightBlock(id,true);
+  }
+
+  app.unHighlightBlock = function(id){
+    app.workspace.highlightBlock(id, false);
+  }
   // Load the cpde demo's language strings.
   document.write('<script src="msg/' + LANG + '.js"></script>\n');
   // Load Blockly's language strings.

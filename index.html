@@ -18,18 +18,19 @@
 </head>
 <body>
   <table width="100%" height="100%">
-    <tr>
-      <td>
+    <tr style="height: 5%"> 
+      <td style="width: 40%">
         <h1><a href="https://developers.google.com/blockly/">Blockly</a>&rlm; &gt;
           <a href="../index.html">Demos</a>&rlm; &gt;
           <span id="title">...</span>
         </h1>
       </td>
-      <td class="farSide">
+      <td style="width: 30%"></td>
+      <td class="farSide" style="width: 30%">
         <select id="languageMenu"></select>
       </td>
     </tr>
-    <tr>
+    <tr style="height: 3%">
       <td colspan=2>
         <table width="100%">
           <tr id="tabRow" height="1em">
@@ -39,7 +40,7 @@
             <td class="tabmin">&nbsp;</td>
             <td id="tab_xml" class="taboff">XML</td>
             <td class="tabmax">
-              <button onclick="mxcParsec.highlightText('a')">Highlight</button>
+              <button onclick="mxcParsec.result=[[['.e|DPX(6,*xX#7lvN71/'],[[0,1,0]],['T']],[['.e|DPX(6,*xX#7lvN71/'],[[0,1,0],[1,2,1]],['e']]];mxcParsec.nextStep();">Execute Step by Step</button>
               <button id="trashButton" class="notext" title="...">
                 <img src="../../media/1x1.gif" class="trash icon21">
               </button>
@@ -53,18 +54,19 @@
           </tr>
         </table>
       </td>
+      <td></td>
     </tr>
-    <tr height="60%">
-      <td   id="content_area">
+    <tr style="height: 62%">
+      <td colspan=2  id="content_area">
       </td>
-      <td>
-          <textarea id="inputText" style="display: inline-block; height: 100%; width: 100%;">
-      </textarea>
+      <td >
+          <div contenteditable="true" id="inputText" style="display: inline-block; height: 600px; width: 600px; overflow: auto;">Testtext Katrin</div>
+          <!--textarea id="inputText2" style="display: inline-block; height: 100px; width: 100px;"></textarea-->
       </td>
     </tr>
-    <tr height="39%">
-      <td colspan="2">
-          <textarea id="output" disabled="disabled" style="display: inline-block; height: 100%; width: 100%;">
+    <tr style="height: 30%;">
+      <td colspan="3">
+          <textarea id="outputText" disabled="disabled" style="display: inline-block; height: 100%; width: 100%;">
             </textarea>
       </td>
     </tr>
