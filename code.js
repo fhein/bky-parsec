@@ -85,13 +85,13 @@ var mxcParsec = (function(app, undefined) {
 
     jsonRpc("parse",
             { "parser":code,
-              "input":document.getElementById('inputText').value
+              "input":document.getElementById('inputText').innerHTML
             },
             function(status, response) {
               console.log(response);
               var result = JSON.parse(response).result.result;
               var output = result ? 'Success.\n' : 'Parsing failed.\n';
-              document.getElementById('output').value += output;
+              document.getElementById('outputText').value += output;
             }
     );
   };
@@ -634,7 +634,8 @@ var mxcParsec = (function(app, undefined) {
     }else{
       app.removeHighlighting();
     }
-    
+
+
     if (app.resultStep<app.result.length){
       var curStep = app.result[app.resultStep];
       //highlight blocks
@@ -663,7 +664,8 @@ var mxcParsec = (function(app, undefined) {
     for (var blockID of prevStep[0]) {
       app.unHighlightBlock(blockID);
     }
-    
+
+
     for (var textMarker of prevStep[1]) {
       app.unHighlightText(textMarker[0]);
     }
@@ -672,6 +674,7 @@ var mxcParsec = (function(app, undefined) {
 
   //highlighting of input Text
   app.highlightText = function (indexFrom, indexTo, highlightType) {
+
 
     var inputText = document.getElementById("inputText");
     //var inputValue = inputText.value;
@@ -686,10 +689,11 @@ var mxcParsec = (function(app, undefined) {
       var newValue = inputValue.substring(0, indexFrom) + "<span class='"+ app.RESULT_CSS[highlightType] +"'>" + inputValue.substring(indexFrom, indexTo) + "</span>" + inputValue.substring(indexTo, inputValue.length);
       inputText.innerHTML = newValue;
     }
-    
+
     app.resultIndexCorrection += (newValue.length - inputValue.length);
-  
+
   }
+
 
   app.unHighlightText = function(indexFrom) {
 
@@ -726,7 +730,7 @@ var mxcParsec = (function(app, undefined) {
 
   jsonRpc('getInput', [], function(status, response) {
     if (status == 200) {
-      document.getElementById('inputText').value = JSON.parse(response).result;
+      document.getElementById('inputText').innerHTML = JSON.parse(response).result;
     }
   });
   //document.getElementById('output').value = '';
