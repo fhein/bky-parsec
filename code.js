@@ -38,6 +38,29 @@ var mxcParsec = (function(app, undefined) {
     options.push(option);
   };
 
+  var jsonRpc = function(method, params, callback) {
+    var url = "http://localhost/mxc-parsec/public/index.php";
+
+    var body = {
+      "jsonrpc":"2.0",
+      "id":1,
+      "method":method,
+      "params":params
+    };
+    if (params) {
+      body.params = params;
+    }
+    var http = new XMLHttpRequest();
+    http.open('POST', url, true);
+    http.setRequestHeader('Content-Type', 'application/json');
+    http.onreadystatechange = function() {
+      if (http.readyState == 4) {
+        callback(http.status, http.response);
+      }
+    }
+    http.send(JSON.stringify(body));
+  }
+
   /**
    * Lookup for names of supported languages. Keys should be in ISO 639 format.
    */
@@ -51,25 +74,26 @@ var mxcParsec = (function(app, undefined) {
    */
   var LANGUAGE_RTL = ['ar', 'fa', 'he', 'lki'];
 
-  /**
-   * Execute the user's var Just a quick and dirty eval. Catch infinite loops.
-   * Not currently used.
-   */
-  var runJS = function() {
-    Blockly.JavaScript.INFINITE_LOOP_TRAP = '  checkTimeout();\n';
-    var timeouts = 0;
-    var checkTimeout = function() {
-      if (timeouts++ > 1000000) {
-        throw MSG['timeout'];
-      }
-    };
-    var code = Blockly.JavaScript.workspaceToCode(workspace);
-    Blockly.JavaScript.INFINITE_LOOP_TRAP = null;
-    try {
-      eval(code);
-    } catch (e) {
-      alert(MSG['badcode'].replace('%1', e));
+  var runParser = function() {
+    var code = Blockly.PHP.workspaceToCode(app.workspace);
+    if (code.length == 0) {
+      return;
     }
+    code = '{'+code+'}';
+    // remove all trailing commas because json does not support them
+    code = JSON.parse(code.replace(/\,(?=\s*?[\}\]])/g, ''));
+
+    jsonRpc("parse",
+            { "parser":code,
+              "input":document.getElementById('inputText').value
+            },
+            function(status, response) {
+              console.log(response);
+              var result = JSON.parse(response).result.result;
+              var output = result ? 'Success.\n' : 'Parsing failed.\n';
+              document.getElementById('output').value += output;
+            }
+    );
   };
 
   /**
@@ -344,8 +368,8 @@ var mxcParsec = (function(app, undefined) {
     content.textContent = '';
     if (checkAllGeneratorFunctionsDefined(generator)) {
       var code = generator.workspaceToCode(app.workspace);
-
-      content.textContent = code;
+      code = '{\n'+code+'}';
+      content.textContent = code.replace(/\,(?=\s*?[\}\]])/g, '');
       if (typeof PR.prettyPrintOne == 'function') {
         code = content.textContent;
         code = PR.prettyPrintOne(code, prettyPrintType);
@@ -495,7 +519,8 @@ var mxcParsec = (function(app, undefined) {
       discard();
       renderContent();
     });
-    // var bindClick('runButton', var runJS);
+
+    bindClick('runButton', runParser);
     // Disable the link button if page isn't backed by App Engine storage.
     var linkButton = document.getElementById('linkButton');
     if ('BlocklyStorage' in window) {
@@ -687,6 +712,13 @@ var mxcParsec = (function(app, undefined) {
   // Load Blockly's language strings.
   document.write('<script src="../../msg/js/' + LANG + '.js"></script>\n');
   window.addEventListener('load', init);
+
+  jsonRpc('getInput', [], function(status, response) {
+    if (status == 200) {
+      document.getElementById('inputText').value = JSON.parse(response).result;
+    }
+  });
+  //document.getElementById('output').value = '';
 
   return app;
 
