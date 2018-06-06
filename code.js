@@ -79,10 +79,10 @@ var mxcParsec = (function(app, undefined) {
               "input":document.getElementById('inputText').value
             },
             function(status, response) {
-                console.log(response);
-                var result = JSON.parse(response).result;
-                var output = result ? 'Parsing successfully completed.\n' : 'Parsing failed.\n';
-                document.getElementById('output').value += output;
+              console.log(response);
+              var result = JSON.parse(response).result.result;
+              var output = result ? 'Success.\n' : 'Parsing failed.\n';
+              document.getElementById('output').value += output;
             }
     );
   };
@@ -629,7 +629,7 @@ var mxcParsec = (function(app, undefined) {
       document.getElementById('inputText').value = JSON.parse(response).result;
     }
   });
-  document.getElementById('output').value = '';
+  //document.getElementById('output').value = '';
 
   return app;
 
