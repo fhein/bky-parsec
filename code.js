@@ -18,14 +18,19 @@ var mxcParsec = (function(app, undefined) {
    */
    app.workspace = null;
 
-   app.RESULT_SUCCESS = 0;
-   app.RESULT_WARNING = 1;
-   app.RESULT_ERROR   = 2;
+   const RESULT_SUCCESS = 'accept';
+   const RESULT_WARNING = 'try';
+   const RESULT_ERROR   = 'reject';
 
    app.RESULT_CSS = [];
-   app.RESULT_CSS[app.RESULT_SUCCESS] = "highlightSuccess";
-   app.RESULT_CSS[app.RESULT_WARNING] = "highlightWarning";
-   app.RESULT_CSS[app.RESULT_ERROR] = "highlightError";
+   app.RESULT_CSS[RESULT_SUCCESS] = "highlightSuccess";
+   app.RESULT_CSS[RESULT_WARNING] = "highlightWarning";
+   app.RESULT_CSS[RESULT_ERROR] = "highlightError";
+
+   var actions = [];
+   var currentStep = -1;
+
+   app.parserResult = null;
 
    var customContextMenuFn = function(options) {
     var option = {
@@ -38,27 +43,33 @@ var mxcParsec = (function(app, undefined) {
     options.push(option);
   };
 
-  var jsonRpc = function(method, params, callback) {
-    var url = "http://localhost/mxc-parsec/public/index.php";
+  var jsonRpc = function(method, params) {
+    return new Promise(function (resolve, reject) {
+      var url = "http://localhost/mxc-parsec/public/index.php";
 
-    var body = {
-      "jsonrpc":"2.0",
-      "id":1,
-      "method":method,
-      "params":params
-    };
-    if (params) {
-      body.params = params;
-    }
-    var http = new XMLHttpRequest();
-    http.open('POST', url, true);
-    http.setRequestHeader('Content-Type', 'application/json');
-    http.onreadystatechange = function() {
-      if (http.readyState == 4) {
-        callback(http.status, http.response);
+      var body = {
+        "jsonrpc":"2.0",
+        "id":1,
+        "method":method,
+        "params":params
+      };
+      if (params) {
+        body.params = params;
       }
-    }
-    http.send(JSON.stringify(body));
+      var http = new XMLHttpRequest();
+      http.open('POST', url, true);
+      http.setRequestHeader('Content-Type', 'application/json');
+      http.onreadystatechange = function() {
+        if (http.readyState == 4) {
+          if (http.status == 200) {
+            resolve(JSON.parse(http.response))
+          } else {
+            reject(http.status);
+          }
+        }
+      }
+      http.send(JSON.stringify(body));
+    });
   }
 
   /**
@@ -74,7 +85,7 @@ var mxcParsec = (function(app, undefined) {
    */
   var LANGUAGE_RTL = ['ar', 'fa', 'he', 'lki'];
 
-  var runParser = function() {
+  var prepareCode = function() {
     var code = Blockly.PHP.workspaceToCode(app.workspace);
     if (code.length == 0) {
       return;
@@ -88,27 +99,52 @@ var mxcParsec = (function(app, undefined) {
       start = code.substr(1,code.indexOf(':')-2);
     }
     code = '{'+code+'}';
-    // remove all trailing commas because json does not support them
-    code = JSON.parse(code.replace(/\,(?=\s*?[\}\]])/g, ''));
+    return {
+      "start": start,
+      "parser": code.replace(/\,(?=\s*?[\}\]])/g, '')
+    };
+  }
 
-    jsonRpc("parse",
-            { "parser":code,
-              "start":start,
-              "input":document.getElementById('inputText').innerHTML
-            },
-            function(status, response) {
-              console.log(response);
-              var result = JSON.parse(response);
-              if (result.result) {
-                var success = result.result.result;
-                var output = success ? 'Success.\n' : 'Parsing failed.\n';
-                document.getElementById('outputText').value += output;
-              } else if (result.error) {
-                var output = 'Error ['+ result.error.code + ']: ' + result.error.message + '\n';
-                document.getElementById('outputText').value += output;
-              }
-            }
-    );
+  var prepareArgs = function() {
+
+    var args = prepareCode();
+
+    args.parser = JSON.parse(args.parser);
+    args.input = document.getElementById('inputText').innerHTML;
+    return args;
+  }
+
+  var stepParser = function() {
+    const call = jsonRpc('parse', prepareArgs());
+
+    call
+      .then(function handleResponse(response){
+        app.response = response;
+      })
+      .catch(function handleError(error){
+        console.log('HTTP error. Returned status: ' + error);
+      });
+  }
+
+  var runParser = function() {
+    const call = jsonRpc('parse', prepareArgs());
+
+    call
+      .then(function handleResponse(response){
+        if (response.result) {
+          var success = response.result.result;
+          var output = success ? 'Success.\n' : 'Parsing failed.\n';
+          document.getElementById('outputText').value += output;
+          app.response = response;
+          app.resultStep = undefined;
+        } else if (response.error) {
+          var output = 'Error ['+ response.error.code + '] : ' + response.error.message + '\n';
+          document.getElementById('outputText').value += output;
+        }
+      })
+      .catch(function handleError(error){
+        console.log('HTTP error. Returned status: ' + error);
+      });
   };
 
   /**
@@ -382,9 +418,8 @@ var mxcParsec = (function(app, undefined) {
     var content = document.getElementById('content_' + selected);
     content.textContent = '';
     if (checkAllGeneratorFunctionsDefined(generator)) {
-      var code = generator.workspaceToCode(app.workspace);
-      code = '{\n'+code+'}';
-      content.textContent = code.replace(/\,(?=\s*?[\}\]])/g, '');
+      var args = prepareCode();
+      content.textContent = args.parser;
       if (typeof PR.prettyPrintOne == 'function') {
         code = content.textContent;
         code = PR.prettyPrintOne(code, prettyPrintType);
@@ -546,6 +581,7 @@ var mxcParsec = (function(app, undefined) {
     });
 
     bindClick('runButton', runParser);
+    bindClick('stepButton', nextStep)
     // Disable the link button if page isn't backed by App Engine storage.
     var linkButton = document.getElementById('linkButton');
     if ('BlocklyStorage' in window) {
@@ -617,6 +653,7 @@ var mxcParsec = (function(app, undefined) {
 
     document.getElementById('linkButton').title = MSG['linkTooltip'];
     document.getElementById('runButton').title = MSG['runTooltip'];
+    document.getElementById('stepButton').title = MSG['stepTooltip'];
     document.getElementById('trashButton').title = MSG['trashTooltip'];
   };
 
@@ -640,7 +677,7 @@ var mxcParsec = (function(app, undefined) {
   }
 
   //step by step result
-  app.nextStep = function(){
+  var nextStep = function(){
 
     //[[["BlockID"],[[indexFrom,indexTo,HighlightColor]],["output"]],[[".e|DPX(6,*xX#7lvN71/"],[[0,1,1]],["T"]]]
 
@@ -650,41 +687,27 @@ var mxcParsec = (function(app, undefined) {
       app.removeHighlighting();
     }
 
-
-    if (app.resultStep<app.result.length){
-      var curStep = app.result[app.resultStep];
+    if (app.resultStep < app.response.result.actions.length){
+      var action = app.response.result.actions[app.resultStep];
       //highlight blocks
-      for (var blockID of curStep[0]) {
-        app.highlightBlock(blockID);
-      }
-      //Highlight Text
-      for (var textMarker of curStep[1]) {
-        app.highlightText(textMarker[0],textMarker[1],textMarker[2])
-      }
+      app.highlightBlock(action.block);
 
-      //write output to field
-      var parsecOutput = curStep[2];
+      //highlight text
+      app.highlightText(action.from, action.to, action.action);
+
+      // output
       var outputText = document.getElementById("outputText");
-      outputText.value = outputText.value + parsecOutput;
-
+      if (action.output) {
+        outputText.value = outputText.value + action.output + '\n';
+      }
       app.resultStep ++;
+    }
   }
-
-  }
-
 
   app.removeHighlighting = function(){
-    var prevStep = app.result[app.resultStep -1];
-
-    for (var blockID of prevStep[0]) {
-      app.unHighlightBlock(blockID);
-    }
-
-
-    for (var textMarker of prevStep[1]) {
-      app.unHighlightText(textMarker[0]);
-    }
-
+    var prevStep = app.response.result.actions[app.resultStep -1];
+    app.unHighlightBlock(prevStep.block);
+    app.unHighlightText(prevStep.from);
   }
 
   //highlighting of input Text
@@ -706,7 +729,6 @@ var mxcParsec = (function(app, undefined) {
     }
 
     app.resultIndexCorrection += (newValue.length - inputValue.length);
-
   }
 
 
@@ -743,11 +765,11 @@ var mxcParsec = (function(app, undefined) {
   document.write('<script src="../../msg/js/' + LANG + '.js"></script>\n');
   window.addEventListener('load', init);
 
-  jsonRpc('getInput', [], function(status, response) {
-    if (status == 200) {
-      document.getElementById('inputText').innerHTML = JSON.parse(response).result;
-    }
-  });
+  var call = jsonRpc('getInput', []);
+  call
+    .then(function(response) {
+      document.getElementById('inputText').innerHTML = response.result;
+    });
 
   return app;
 

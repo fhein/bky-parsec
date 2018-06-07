@@ -35,6 +35,14 @@ button.primary {
 button.primary>img {
   opacity: 1;
 }
+button.step {
+  border: 1px solid #123456;
+  background-color: #123456;
+  color: #aaa;
+}
+button.step>img {
+  opacity: 1;
+}
 button>img {
   opacity: 0.6;
   vertical-align: text-bottom;
@@ -165,6 +173,10 @@ button {
   background-position: -21px 0px;
 }
 .run {
+  background-position: -42px 0px;
+}
+
+.step {
   background-position: -42px 0px;
 }
 
