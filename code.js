@@ -79,12 +79,21 @@ var mxcParsec = (function(app, undefined) {
     if (code.length == 0) {
       return;
     }
+    var start;
+
+    if (code[0] == '[') {
+      start = 'parser';
+      code = '"'+start + '":' + code;
+    } else {
+      start = code.substr(1,code.indexOf(':')-2);
+    }
     code = '{'+code+'}';
     // remove all trailing commas because json does not support them
     code = JSON.parse(code.replace(/\,(?=\s*?[\}\]])/g, ''));
 
     jsonRpc("parse",
             { "parser":code,
+              "start":start,
               "input":document.getElementById('inputText').innerHTML
             },
             function(status, response) {
@@ -733,7 +742,7 @@ var mxcParsec = (function(app, undefined) {
       document.getElementById('inputText').innerHTML = JSON.parse(response).result;
     }
   });
-  //document.getElementById('output').value = '';
+  //document.getElementById('outputText').innerHTML = '';
 
   return app;
 
