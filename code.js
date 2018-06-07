@@ -726,9 +726,9 @@ var mxcParsec = (function(app, undefined) {
     if (indexTo >= 0 && indexTo > indexFrom) {
       var newValue = inputValue.substring(0, indexFrom) + "<span class='"+ app.RESULT_CSS[highlightType] +"'>" + inputValue.substring(indexFrom, indexTo) + "</span>" + inputValue.substring(indexTo, inputValue.length);
       inputText.innerHTML = newValue;
+      app.resultIndexCorrection += (newValue.length - inputValue.length);
     }
 
-    app.resultIndexCorrection += (newValue.length - inputValue.length);
   }
 
 
