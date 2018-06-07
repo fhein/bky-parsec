@@ -20,7 +20,7 @@ var mxcParsec = (function(app, undefined) {
 
    app.RESULT_SUCCESS = 0;
    app.RESULT_WARNING = 1;
-   app.RESULT_ERROR = 2;
+   app.RESULT_ERROR   = 2;
 
    app.RESULT_CSS = [];
    app.RESULT_CSS[app.RESULT_SUCCESS] = "highlightSuccess";
