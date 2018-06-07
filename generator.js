@@ -138,9 +138,8 @@ Generator.generators = {
       var name = block.getFieldValue('PARAM1');
       var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
       var start = block.getFieldValue('PARAM3');
-      return '["' + block.data + '", [\n' + Blockly.PHP.INDENT + '"' + name +
-        '",\n' + subject + Blockly.PHP.INDENT + '"' + block.id + '", "'+ start + '",\n' +
-        ']],\n';
+      return '"'+ name + '":["' + block.data + '", [\n' + Blockly.PHP.INDENT + '"' + block.id + '", "' + name + '",\n'
+      + '[' + subject + '], ' + Blockly.PHP.INDENT + '"' + start + '",\n' + ']],\n';
     }
   },
 }

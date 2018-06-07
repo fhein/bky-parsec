@@ -98,9 +98,15 @@ var mxcParsec = (function(app, undefined) {
             },
             function(status, response) {
               console.log(response);
-              var result = JSON.parse(response).result.result;
-              var output = result ? 'Success.\n' : 'Parsing failed.\n';
-              document.getElementById('outputText').value += output;
+              var result = JSON.parse(response);
+              if (result.result) {
+                var success = result.result.result;
+                var output = success ? 'Success.\n' : 'Parsing failed.\n';
+                document.getElementById('outputText').value += output;
+              } else if (result.error) {
+                var output = 'Error ['+ result.error.code + ']: ' + result.error.message + '\n';
+                document.getElementById('outputText').value += output;
+              }
             }
     );
   };
@@ -471,11 +477,12 @@ var mxcParsec = (function(app, undefined) {
     app.refreshToolbox = function(){
       debugger;
       discard();
-      var config = Config.setup(); 
+      var config = Config.setup();
       Blockly.defineBlocksWithJsonArray(config.blocks);
       var toolboxXml = Blockly.Xml.textToDom(config.toolbox);
-      app.workspace.updateToolbox(toolboxXml); 
+      app.workspace.updateToolbox(toolboxXml);
     }
+    document.getElementById('outputText').innerHTML = '';
 
     // corrects parserNames Array if a rule or grammar block is deleted
     function onDeletionNameHandler(event) {
@@ -635,9 +642,9 @@ var mxcParsec = (function(app, undefined) {
 
   //step by step result
   app.nextStep = function(){
-    
+
     //[[["BlockID"],[[indexFrom,indexTo,HighlightColor]],["output"]],[[".e|DPX(6,*xX#7lvN71/"],[[0,1,1]],["T"]]]
-    
+
     if (!app.resultStep) {
       app.resultStep = 0;
     }else{
@@ -713,7 +720,7 @@ var mxcParsec = (function(app, undefined) {
     var indexStart1 = inputValue.indexOf("<span", indexFrom);
     var indexEnd = inputValue.indexOf(">", indexFrom);
     var indexStart2 = inputValue.indexOf("</span>", indexFrom);
-    if (indexStart1 == indexFrom) { 
+    if (indexStart1 == indexFrom) {
       var s1 = inputValue.substring(0,indexStart1);
       var s2 = inputValue.substring(indexEnd + 1,indexStart2);
       var s3= inputValue.substring(indexStart2 + 7, inputValue.length);
@@ -742,7 +749,6 @@ var mxcParsec = (function(app, undefined) {
       document.getElementById('inputText').innerHTML = JSON.parse(response).result;
     }
   });
-  //document.getElementById('outputText').innerHTML = '';
 
   return app;
 
