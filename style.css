@@ -140,7 +140,12 @@ pre.content {
   margin-right: 15px;
   margin-top: 15px;
 }
-
+#parserMenu {
+  vertical-align: top;
+  margin-left: 15px;
+  margin-right: 0px;
+  margin-top: 15px;
+}
 /* Buttons */
 button {
   padding: 1px 10px;

@@ -30,11 +30,13 @@ var Config = (function(Config, mxcParsec, undefined) {
     ],
   }
 
-  var categories = [{
-      "ref": "catRule",
-      "proto": "undone",
-      "generator": "undone",
-      "blocks": [{
+  var categories = {
+    "full": [
+      {
+        "ref": "catRule",
+        "proto": "undone",
+        "generator": "undone",
+        "blocks": [{
           "type": "rule_type",
           "proto": "rule",
           "generator": "rule",
@@ -42,27 +44,27 @@ var Config = (function(Config, mxcParsec, undefined) {
           "name": "rule"
         },
         {
-            "type": "grammar_type",
-            "proto": "grammar",
-            "generator": "grammar",
-            "data": "grammar",
-            "name": "grammar"
-          },
-          {
-            "type": "reference_type",
-            "proto": "reference",
-            "generator": "single_text_field",
-            "data": "reference",
-            "name": "reference"
-          }
-      ]
-    },
-    {},
-    {
-      "ref": "catDirective",
-      "proto": "single_parser",
-      "generator": "single_parser",
-      "blocks": [{
+          "type": "grammar_type",
+          "proto": "grammar",
+          "generator": "grammar",
+          "data": "grammar",
+          "name": "grammar"
+        },
+        {
+          "type": "reference_type",
+          "proto": "reference",
+          "generator": "single_text_field",
+          "data": "reference",
+          "name": "reference"
+        }
+        ]
+      },
+      {},
+      {
+        "ref": "catDirective",
+        "proto": "single_parser",
+        "generator": "single_parser",
+        "blocks": [{
           "type": "expect_type",
           "data": "expect",
           "name": "expect"
@@ -87,26 +89,26 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "matches",
           "name": "matches"
         },
-      ]
-    },
-    {},
-    {
-      "ref": "catCast",
-      "proto": "single_parser",
-      "generator": "single_parser",
-      "blocks": [{
-        "type": "as_string_type",
+        ]
+      },
+      {},
+      {
+        "ref": "catCast",
+        "proto": "single_parser",
         "generator": "single_parser",
-        "data": "as_string",
-        "name": "as_string"
-      }, ]
-    },
-    {},
-    {
-      "ref": "catLoops",
-      "proto": "single_parser",
-      "generator": "single_parser",
-      "blocks": [{
+        "blocks": [{
+          "type": "as_string_type",
+          "generator": "single_parser",
+          "data": "as_string",
+          "name": "as_string"
+        },]
+      },
+      {},
+      {
+        "ref": "catLoops",
+        "proto": "single_parser",
+        "generator": "single_parser",
+        "blocks": [{
           "type": "sequence_type",
           "generator": "array_parser",
           "data": "sequence",
@@ -151,13 +153,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "repeat",
           "name": "repeat_min_max"
         },
-      ]
-    },
-    {
-      "ref": "catLogic",
-      "proto": "single_parser",
-      "generator": "single_parser",
-      "blocks": [{
+        ]
+      },
+      {
+        "ref": "catLogic",
+        "proto": "single_parser",
+        "generator": "single_parser",
+        "blocks": [{
           "type": "alternative_type",
           "data": "alternative",
           "name": "alternative"
@@ -193,13 +195,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "and",
           "name": "and"
         }
-      ]
-    },
-    {
-      "ref": "catSkipper",
-      "proto": "single_parser",
-      "generator": "single_parser",
-      "blocks": [{
+        ]
+      },
+      {
+        "ref": "catSkipper",
+        "proto": "single_parser",
+        "generator": "single_parser",
+        "blocks": [{
           "type": "lexeme_type",
           "data": "lexeme",
           "name": "lexeme"
@@ -222,13 +224,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "skip",
           "name": "skip"
         },
-      ]
-    },
-    {},
-    {
-      "ref": "catString",
-      "generator": "undone",
-      "blocks": [{
+        ]
+      },
+      {},
+      {
+        "ref": "catString",
+        "generator": "undone",
+        "blocks": [{
           "type": "string_type",
           "proto": "single_text_field",
           "generator": "single_text_field",
@@ -248,12 +250,12 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "symbols",
           "name": "symbols"
         }
-      ]
-    },
-    {
-      "ref": "catChar",
-      "proto": "char_class_input",
-      "blocks": [{
+        ]
+      },
+      {
+        "ref": "catChar",
+        "proto": "char_class_input",
+        "blocks": [{
           "type": "char_all_type",
           "proto": "no_arguments",
           "generator": "no_argument",
@@ -295,12 +297,12 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "char_class",
           "name": "char_class"
         },
-      ]
-    },
-    {},
-    {
-      "ref": "catBoolean",
-      "blocks": [{
+        ]
+      },
+      {},
+      {
+        "ref": "catBoolean",
+        "blocks": [{
           "type": "bool_type",
           "proto": "undone",
           "generator": "undone",
@@ -321,13 +323,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "false",
           "name": "false"
         }
-      ]
-    },
-    {
-      "ref": "catInteger",
-      "proto": "integer_select",
-      "generator": "integer",
-      "blocks": [{
+        ]
+      },
+      {
+        "ref": "catInteger",
+        "proto": "integer_select",
+        "generator": "integer",
+        "blocks": [{
           "type": "signed_integer_type",
           "proto": "single_integer_value",
           "shadow": "integerShadow",
@@ -396,14 +398,14 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "char",
           "name": "integer_digits_input"
         },
-      ]
-    },
-    {},
-    {
-      "ref": "catBinary",
-      "shadow": "binaryShadow",
-      "proto": "binary",
-      "blocks": [{
+        ]
+      },
+      {},
+      {
+        "ref": "catBinary",
+        "shadow": "binaryShadow",
+        "proto": "binary",
+        "blocks": [{
           "type": "byte_type",
           "proto": "binary_accept_all",
           "shadow": "byteShadow",
@@ -455,12 +457,12 @@ var Config = (function(Config, mxcParsec, undefined) {
           "generator": "integer_input",
           "name": "binary_input"
         },
-      ]
-    },
-    {},
-    {
-      "ref": "catAuxiliary",
-      "blocks": [{
+        ]
+      },
+      {},
+      {
+        "ref": "catAuxiliary",
+        "blocks": [{
           "type": "eol_type",
           "proto": "no_arguments",
           "generator": "no_argument",
@@ -502,9 +504,124 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "advance",
           "name": "advance"
         }
+        ]
+      }
+    ],
+    "ebnf": [{
+      "ref": "catRule",
+      "proto": "undone",
+      "generator": "undone",
+      "blocks": [{
+        "type": "rule_type",
+        "proto": "rule",
+        "generator": "rule",
+        "data": "rule",
+        "name": "rule"
+      },
+      {
+        "type": "grammar_type",
+        "proto": "grammar",
+        "generator": "grammar",
+        "data": "grammar",
+        "name": "grammar"
+      },
+      {
+        "type": "reference_type",
+        "proto": "reference",
+        "generator": "single_text_field",
+        "data": "reference",
+        "name": "reference"
+      }
       ]
-    }
-  ];
+    },
+    {},
+    {
+      "ref": "catLogic",
+      "proto": "single_parser",
+      "blocks": [{
+        "type": "alternative_type",
+        "data": "alternative",
+        "name": "alternative"
+      },
+      {
+        "type": "sequence_type",
+        "generator": "array_parser",
+        "data": "sequence",
+        "name": "sequence"
+      }]
+    },
+    {},
+    {
+      "ref": "catChar",
+      "proto": "char_class_input",
+      "blocks": [{
+        "type": "char_type",
+        "proto": "single_text_field",
+        "generator": "single_text_field",
+        "data": "char",
+        "name": "char"
+      }
+      ]
+    }],
+    "bnf": [
+      {
+        "ref": "catRule",
+        "proto": "undone",
+        "generator": "undone",
+        "blocks": [{
+          "type": "rule_type",
+          "proto": "rule",
+          "generator": "rule",
+          "data": "rule",
+          "name": "rule"
+        },
+        {
+          "type": "grammar_type",
+          "proto": "grammar",
+          "generator": "grammar",
+          "data": "grammar",
+          "name": "grammar"
+        },
+        {
+          "type": "reference_type",
+          "proto": "reference",
+          "generator": "single_text_field",
+          "data": "reference",
+          "name": "reference"
+        }
+        ]
+      },
+      {},
+      {
+        "ref": "catLogic",
+        "proto": "single_parser",
+        "blocks": [{
+          "type": "alternative_type",
+          "data": "alternative",
+          "name": "alternative"
+        },
+        {
+          "type": "sequence_type",
+          "generator": "array_parser",
+          "data": "sequence",
+          "name": "sequence"
+        }]
+      },
+      {},
+      {
+        "ref": "catChar",
+        "proto": "char_class_input",
+        "blocks": [{
+          "type": "char_type",
+          "proto": "single_text_field",
+          "generator": "single_text_field",
+          "data": "char",
+          "name": "char"
+        }
+        ]
+      }
+    ]
+  };
 
   var jbb = new JsonBlockBuilder(defaultExtensions);
 
@@ -780,8 +897,9 @@ var Config = (function(Config, mxcParsec, undefined) {
 
   var getBlocks = function() {
     var json = [];
+    var parserSet = document.getElementById('parserMenu').value;
 
-    for (var cat of categories) {
+    for (var cat of categories[parserSet]) {
       if (Object.keys(cat).length === 0) {
         continue;
       }
@@ -867,10 +985,12 @@ var Config = (function(Config, mxcParsec, undefined) {
   }
 
   var getToolbox = function() {
+    var parserSet = document.getElementById('parserMenu').value;
+  
     // generate the toolbox XML
     toolbox = '<xml>';
     var generatorsUndone = [];
-    for (var cat of categories) {
+    for (var cat of categories[parserSet]) {
       if (Object.keys(cat).length === 0) {
         toolbox += '<sep></sep>';
         continue;

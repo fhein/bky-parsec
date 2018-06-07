@@ -434,6 +434,16 @@ var mxcParsec = (function(app, undefined) {
       }
     });
 
+    //refreshes the toolbox based on parserSet selection menu
+    app.refreshToolbox = function(){
+      debugger;
+      discard();
+      var config = Config.setup(); 
+      Blockly.defineBlocksWithJsonArray(config.blocks);
+      var toolboxXml = Blockly.Xml.textToDom(config.toolbox);
+      app.workspace.updateToolbox(toolboxXml); 
+    }
+
     // corrects parserNames Array if a rule or grammar block is deleted
     function onDeletionNameHandler(event) {
       if (event.type == Blockly.Events.DELETE) {

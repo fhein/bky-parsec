@@ -17,7 +17,7 @@
   <script src="config.js"></script>
 </head>
 <body>
-  <table width="100%" height="100%">
+  <table width="100%" height="100%" style="table-layout: fixed;">
     <tr style="height: 5%"> 
       <td style="width: 40%">
         <h1><a href="https://developers.google.com/blockly/">Blockly</a>&rlm; &gt;
@@ -27,6 +27,11 @@
       </td>
       <td style="width: 30%"></td>
       <td class="farSide" style="width: 30%">
+        <select id="parserMenu" onchange="mxcParsec.refreshToolbox();">
+          <option value="full">Full</option>
+          <option value="ebnf">EBNF</option>
+          <option value="bnf">BNF</option>
+        </select>
         <select id="languageMenu"></select>
       </td>
     </tr>
@@ -60,7 +65,7 @@
       <td colspan=2  id="content_area">
       </td>
       <td >
-          <div contenteditable="true" id="inputText" style="display: inline-block; height: 600px; width: 600px; overflow: auto;">Testtext Katrin</div>
+          <div contenteditable="true" id="inputText" style="display: inline-block; height: 100%; max-height: 600px; width: 100%; overflow: auto;">Testtext Katrin</div>
           <!--textarea id="inputText2" style="display: inline-block; height: 100px; width: 100px;"></textarea-->
       </td>
     </tr>
