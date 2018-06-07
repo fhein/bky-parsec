@@ -544,6 +544,31 @@ var Config = (function(Config, mxcParsec, undefined) {
         "generator": "array_parser",
         "data": "sequence",
         "name": "sequence"
+      },
+      {
+        "type": "kleene_star_type",
+        "generator": "single_parser",
+        "data": "kleene_star",
+        "name": "kleene_star"
+      },
+      {
+        "type": "kleene_plus_type",
+        "generator": "single_parser",
+        "data": "kleene_plus",
+        "name": "kleene_plus"
+      },
+      {
+        "type": "repeat_type",
+        "proto": "repeat",
+        "generator": "repeat",
+        "data": "repeat",
+        "name": "repeat"
+      },
+      {
+        "type": "optional_type",
+        "generator": "single_parser",
+        "data": "optional",
+        "name": "optional"
       }]
     },
     {},
@@ -556,6 +581,13 @@ var Config = (function(Config, mxcParsec, undefined) {
         "generator": "single_text_field",
         "data": "char",
         "name": "char"
+      },
+      {
+        "type": "string_type",
+        "proto": "single_text_field",
+        "generator": "single_text_field",
+        "data": "string",
+        "name": "string"
       }
       ]
     }],

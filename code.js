@@ -117,7 +117,7 @@ var mxcParsec = (function(app, undefined) {
   var discard = function() {
     var blocks = app.workspace.getAllBlocks();
     var count = blocks.length;
-    if (count < 2 || window.confirm(Blockly.Msg.DELETE_ALL_BLOCKS.replace('%1', count))) {
+    if (count < 2 || window.confirm(MSG['deleteAllBlocks'].replace('%1', count))) {
       for (var block of blocks) {
         block.setDeletable(true);
       }
@@ -475,7 +475,6 @@ var mxcParsec = (function(app, undefined) {
 
     //refreshes the toolbox based on parserSet selection menu
     app.refreshToolbox = function(){
-      debugger;
       discard();
       var config = Config.setup();
       Blockly.defineBlocksWithJsonArray(config.blocks);
