@@ -18,19 +18,17 @@ var mxcParsec = (function(app, undefined) {
    */
    app.workspace = null;
 
-   const RESULT_SUCCESS = 'accept';
-   const RESULT_WARNING = 'try';
-   const RESULT_ERROR   = 'reject';
+   var RESULT_CSS = [];
+   RESULT_CSS['accept'] = "highlightAccept";
+   RESULT_CSS['try']    = "highlightTry";
+   RESULT_CSS['reject'] = "highlightReject";
 
-   app.RESULT_CSS = [];
-   app.RESULT_CSS[RESULT_SUCCESS] = "highlightSuccess";
-   app.RESULT_CSS[RESULT_WARNING] = "highlightWarning";
-   app.RESULT_CSS[RESULT_ERROR] = "highlightError";
-
-   var actions = [];
+   var response;
+   var input;
+   var singleStep;
+   var resultStep = undefined;
    var currentStep = -1;
-
-   app.parserResult = null;
+   var resultIndexCorrection = 0;
 
    var customContextMenuFn = function(options) {
     var option = {
@@ -62,6 +60,7 @@ var mxcParsec = (function(app, undefined) {
       http.onreadystatechange = function() {
         if (http.readyState == 4) {
           if (http.status == 200) {
+            //console.log(http.response);
             resolve(JSON.parse(http.response))
           } else {
             reject(http.status);
@@ -106,45 +105,108 @@ var mxcParsec = (function(app, undefined) {
   }
 
   var prepareArgs = function() {
-
     var args = prepareCode();
-
     args.parser = JSON.parse(args.parser);
     args.input = document.getElementById('inputText').innerHTML;
     return args;
   }
 
   var stepParser = function() {
-    const call = jsonRpc('parse', prepareArgs());
-
+    const call = jsonRpc('trace', prepareArgs());
+    var outputText = document.getElementById('outputText');
     call
-      .then(function handleResponse(response){
-        app.response = response;
+      .then(function(r){
+        response = r;
+        if (response.error) {
+          var output = 'Error ['+ response.error.code + '] : ' + response.error.message + '\n';
+          outputText.value += output;
+          outputText.scrollTop = outputText.scrollHeight;
+          return;
+        }
+        outputText.value = 'Single Step Parser started.\n\n'
+        singleStep = window.setInterval(function(){
+          if (!resultStep) {
+            resultStep = 0;
+          } else {
+            // remove highlighting of previous step
+            var prevStep = response.result.actions[resultStep-1];
+            app.workspace.highlightBlock(prevStep.block, false);
+            unHighlightText(prevStep.from);
+          }
+
+          if (resultStep < response.result.actions.length){
+            // do highlighting for current step
+            var curStep = response.result.actions[resultStep];
+            console.log(curStep);
+            //highlight blocks
+            app.workspace.highlightBlock(curStep.block, true);
+
+            //highlight text
+            highlightText(curStep.from, curStep.to, curStep.action);
+
+            // output
+            if (curStep.output && curStep.output.length != 0) {
+              outputText.value += curStep.output;
+              if (curStep.action == 'accept') {
+                outputText.value += ', attribute: ' + curStep.attribute;
+              }
+              outputText.value += '\n';
+            }
+            resultStep++;
+          } else {
+            window.clearInterval(singleStep);
+            outputText.value += response.result.result ? '\nParser succeeded. ' : '\nParser failed. ';
+            var rest = document.getElementById('inputText').innerHTML.length - response.result.position;
+            var m = ' byte';
+            if (rest > 1) {
+              m += 's'
+            }
+            outputText.value += (rest > 0) ? rest + m + ' of input left.\n' : 'All input consumed.\n';
+            if (response.result.result == true) {
+              outputText.value += '\nAttribute:\n';
+              outputText.value += JSON.stringify(response.result.attribute, 0, 2) + '\n\n';
+            }
+            resultStep = undefined;
+            response = undefined;
+          }
+          outputText.scrollTop = outputText.scrollHeight;
+        }, 700);
       })
-      .catch(function handleError(error){
-        console.log('HTTP error. Returned status: ' + error);
+      .catch(function(error){
+        outputText.value += 'HTTP error. Returned status: ' + error + '\n';
+        outputText.scrollTop = outputText.scrollHeight;
       });
   }
 
   var runParser = function() {
     const call = jsonRpc('parse', prepareArgs());
-
+    var outputText = document.getElementById('outputText');
+    outputText.value = 'Parser started.\n\n';
     call
-      .then(function handleResponse(response){
+      .then(function handleResponse(r){
+        response = r;
         if (response.result) {
           var success = response.result.result;
-          var output = success ? 'Success.\n' : 'Parsing failed.\n';
-          document.getElementById('outputText').value += output;
-          app.response = response;
-          app.resultStep = undefined;
+          var output = success ? 'Parser succeeded. ' : 'Parser failed. ';
+          outputText.value += output;
+          var rest = document.getElementById('inputText').innerHTML.length - response.result.position;
+          var m = ' byte';
+          if (rest > 1) {
+            m += 's'
+          }
+          outputText.value += (rest > 0) ? rest + m + ' of input left.\n' : 'All input consumed.\n';
+          if (response.result.result == true) {
+            outputText.value += '\nAttribute:\n';
+            outputText.value += JSON.stringify(response.result.attribute, 0, 2) + '\n\n';
+          }
         } else if (response.error) {
-          var output = 'Error ['+ response.error.code + '] : ' + response.error.message + '\n';
-          document.getElementById('outputText').value += output;
+          outputText.value += 'Error ['+ response.error.code + '] : ' + response.error.message + '\n';
         }
       })
       .catch(function handleError(error){
-        console.log('HTTP error. Returned status: ' + error);
+        outputText.value += 'HTTP error. Returned status: ' + error + '\n';
       });
+    outputText.scrollTop = outputText.scrollHeight;
   };
 
   /**
@@ -581,7 +643,7 @@ var mxcParsec = (function(app, undefined) {
     });
 
     bindClick('runButton', runParser);
-    bindClick('stepButton', nextStep)
+    bindClick('stepButton', stepParser)
     // Disable the link button if page isn't backed by App Engine storage.
     var linkButton = document.getElementById('linkButton');
     if ('BlocklyStorage' in window) {
@@ -676,71 +738,30 @@ var mxcParsec = (function(app, undefined) {
     var test = this;
   }
 
-  //step by step result
-  var nextStep = function(){
-
-    //[[["BlockID"],[[indexFrom,indexTo,HighlightColor]],["output"]],[[".e|DPX(6,*xX#7lvN71/"],[[0,1,1]],["T"]]]
-
-    if (!app.resultStep) {
-      app.resultStep = 0;
-    }else{
-      app.removeHighlighting();
-    }
-
-    if (app.resultStep < app.response.result.actions.length){
-      var action = app.response.result.actions[app.resultStep];
-      //highlight blocks
-      app.highlightBlock(action.block);
-
-      //highlight text
-      app.highlightText(action.from, action.to, action.action);
-
-      // output
-      var outputText = document.getElementById("outputText");
-      if (action.output) {
-        outputText.value = outputText.value + action.output + '\n';
-      }
-      app.resultStep ++;
-    }
-  }
-
-  app.removeHighlighting = function(){
-    var prevStep = app.response.result.actions[app.resultStep -1];
-    app.unHighlightBlock(prevStep.block);
-    app.unHighlightText(prevStep.from);
-  }
-
   //highlighting of input Text
-  app.highlightText = function (indexFrom, indexTo, highlightType) {
-
-
+  var highlightText = function (indexFrom, indexTo, highlightType) {
     var inputText = document.getElementById("inputText");
     //var inputValue = inputText.value;
 
-    if(!app.resultIndexCorrection) app.resultIndexCorrection = 0;
-
-    indexFrom += app.resultIndexCorrection;
-    indexTo += app.resultIndexCorrection;
+    indexFrom += resultIndexCorrection;
+    indexTo += resultIndexCorrection;
 
     var inputValue = inputText.innerHTML;
     if (indexTo >= 0 && indexTo > indexFrom) {
-      var newValue = inputValue.substring(0, indexFrom) + "<span class='"+ app.RESULT_CSS[highlightType] +"'>" + inputValue.substring(indexFrom, indexTo) + "</span>" + inputValue.substring(indexTo, inputValue.length);
+      var newValue = inputValue.substring(0, indexFrom) + "<span class='"+ RESULT_CSS[highlightType] +"'>" + inputValue.substring(indexFrom, indexTo) + "</span>" + inputValue.substring(indexTo, inputValue.length);
       inputText.innerHTML = newValue;
-      app.resultIndexCorrection += (newValue.length - inputValue.length);
+      resultIndexCorrection += (newValue.length - inputValue.length);
     }
-
   }
 
-
-  app.unHighlightText = function(indexFrom) {
-
+  var unHighlightText = function(indexFrom) {
     var inputText = document.getElementById("inputText");
-
-    //var inputValue = inputText.value;
     var inputValue = inputText.innerHTML;
+
     var indexStart1 = inputValue.indexOf("<span", indexFrom);
     var indexEnd = inputValue.indexOf(">", indexFrom);
     var indexStart2 = inputValue.indexOf("</span>", indexFrom);
+
     if (indexStart1 == indexFrom) {
       var s1 = inputValue.substring(0,indexStart1);
       var s2 = inputValue.substring(indexEnd + 1,indexStart2);
@@ -748,17 +769,10 @@ var mxcParsec = (function(app, undefined) {
      var newValue = s1 + s2 + s3;
      inputText.innerHTML = newValue;
 
-     app.resultIndexCorrection += newValue.length - inputValue.length;
+     resultIndexCorrection += newValue.length - inputValue.length;
     }
   }
 
-  app.highlightBlock = function(id) {
-    app.workspace.highlightBlock(id,true);
-  }
-
-  app.unHighlightBlock = function(id){
-    app.workspace.highlightBlock(id, false);
-  }
   // Load the cpde demo's language strings.
   document.write('<script src="msg/' + LANG + '.js"></script>\n');
   // Load Blockly's language strings.
@@ -769,6 +783,10 @@ var mxcParsec = (function(app, undefined) {
   call
     .then(function(response) {
       document.getElementById('inputText').innerHTML = response.result;
+    })
+    .catch(function(error){
+      outputText.value += 'HTTP error. Returned status: ' + error + '\n';
+      outputText.scrollTop = outputText.scrollHeight;
     });
 
   return app;

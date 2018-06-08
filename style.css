@@ -180,14 +180,14 @@ button {
   background-position: -42px 0px;
 }
 
-.highlightWarning {
-  background-color: yellow;
+.highlightTry {
+  background-color: #9eb4d8;
 }
 
-.highlightSuccess {
-  background-color: green;
+.highlightAccept {
+  background-color: #9dd8ad;
 }
 
-.highlightError {
-  background-color: red;
+.highlightReject {
+  background-color: #fc9cb6;
 }
