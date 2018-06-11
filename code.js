@@ -25,11 +25,13 @@ var mxcParsec = (function(app, undefined) {
 
    var response;
    var input;
-   var selectedRange;
    var animation;
    var resultStep = undefined;
    var currentStep = -1;
    var resultIndexCorrection = 0;
+
+   var inputText;
+   var outputText;
 
    var customContextMenuFn = function(options) {
     var option = {
@@ -108,7 +110,6 @@ var mxcParsec = (function(app, undefined) {
   app.prepareArgs = function(code) {
     var args = app.prepareCode(code);
     args.parser = JSON.parse(args.parser);
-    var inputText = document.getElementById('inputText');
     args.input = inputText.innerHTML;
     var sel = window.getSelection();
     var range = sel.rangeCount ?  sel.getRangeAt(0) : null;
@@ -123,71 +124,140 @@ var mxcParsec = (function(app, undefined) {
     return args;
   }
 
-  var singleStep = function(args) {
-    const call = jsonRpc('trace', args);
-    var outputText = document.getElementById('outputText');
-    call
-      .then(function(r){
-        response = r;
-        if (response.error) {
-          var output = 'Error ['+ response.error.code + '] : ' + response.error.message + '\n';
-          outputText.value += output;
-          outputText.scrollTop = outputText.scrollHeight;
-          return;
+  var nextStep = function() {
+    if (!resultStep) {
+      resultStep = 0;
+    } else {
+      // remove highlighting of previous step
+      var prevStep = response.result.actions[resultStep-1];
+      app.workspace.highlightBlock(prevStep.block, false);
+      unHighlightText(prevStep.from);
+    }
+
+    if (resultStep < response.result.actions.length){
+
+      // do highlighting for current step
+      var curStep = response.result.actions[resultStep];
+
+      //highlight blocks
+      app.workspace.highlightBlock(curStep.block, true);
+
+      //highlight text
+      highlightText(curStep.from, curStep.to, curStep.action);
+
+      // output
+      if (curStep.output && curStep.output.length != 0) {
+        outputText.value += curStep.output;
+        if (curStep.action == 'accept') {
+          outputText.value += ', attribute: ' + curStep.attribute;
         }
-        outputText.value = 'Single Step Parser started.\n\n'
-        var animation = window.setInterval(function(){
-          if (!resultStep) {
-            resultStep = 0;
-          } else {
-            // remove highlighting of previous step
-            var prevStep = response.result.actions[resultStep-1];
-            app.workspace.highlightBlock(prevStep.block, false);
-            unHighlightText(prevStep.from);
+        outputText.value += '\n';
+      }
+      resultStep++;
+      outputText.scrollTop = outputText.scrollHeight;
+      return false;
+    } else {
+      outputText.value += response.result.result ? '\nParser succeeded. ' : '\nParser failed. ';
+      var bytesLeft = response.result.bytesLeft;
+      var m = ' byte';
+      if (bytesLeft > 1) m += 's';
+      outputText.value += (bytesLeft > 0) ? bytesLeft + m + ' of input left.\n' : 'All input consumed.\n';
+      if (response.result.result == true) {
+        outputText.value += '\nAttribute structure:\n';
+        outputText.value += JSON.stringify(response.result.attribute, 0, 2) + '\n\n';
+      }
+      outputText.scrollTop = outputText.scrollHeight;
+      return true;
+    }
+  }
+
+  var intervalPlayer = {
+    state: 'idle',
+    startTime: 0,
+    endTime: 0,
+    callback: null,
+
+    init: function(callback, interval) {
+      this.interval = interval;
+      this.callback = callback;
+      this.startTime = 0;
+      this.endTime = 0;
+      this.state = 'idle';
+      resultStep = undefined;
+    },
+
+    dispatcher: function() {
+      if (intervalPlayer.callback()) intervalPlayer.stop();
+    },
+
+    stop: function() {
+      if (this.state == 'idle') return;
+      if (this.state == 'running') {
+        window.clearInterval(this.animation);
+      }
+      this.endTime = new Date();
+      resultStep = undefined;
+      this.state = 'idle';
+      console.log(this.state);
+    },
+
+    step: function() {
+      if (this.state != 'paused') return;
+      if (this.callback()) {
+        this.endTime = new Date();
+        this.state = 'idle';
+      }
+    },
+
+    run: function() {
+      if (this.state != 'idle') return;
+      this.startTime = new Date();
+      this.animation = window.setInterval(this.dispatcher, this.interval);
+      this.state = 'running';
+      console.log(this.state);
+    },
+
+    resume: function() {
+      if (this.state != 'paused') return;
+      this.startTime = new Date();
+      this.animation = window.setInterval(this.dispatcher, this.interval);
+      this.state = 'running';
+      console.log(this.state);
+    },
+
+    pause: function() {
+      if (this.state != 'running') return;
+      window.clearInterval(this.animation);
+      this.state = 'paused';
+      console.log(this.state);
+    }
+  }
+
+  var singleStep = function(args) {
+    if (intervalPlayer.state == 'idle') {
+      const call = jsonRpc('trace', args);
+      call
+        .then(function(r){
+          response = r;
+          if (response.error) {
+            var output = 'Error ['+ response.error.code + '] : ' + response.error.message + '\n';
+            outputText.value += output;
+            outputText.scrollTop = outputText.scrollHeight;
+            return;
           }
-
-          if (resultStep < response.result.actions.length){
-            // do highlighting for current step
-            var curStep = response.result.actions[resultStep];
-            //highlight blocks
-            app.workspace.highlightBlock(curStep.block, true);
-
-            //highlight text
-            highlightText(curStep.from, curStep.to, curStep.action);
-
-            // output
-            if (curStep.output && curStep.output.length != 0) {
-              outputText.value += curStep.output;
-              if (curStep.action == 'accept') {
-                outputText.value += ', attribute: ' + curStep.attribute;
-              }
-              outputText.value += '\n';
-            }
-            resultStep++;
-          } else {
-            window.clearInterval(animation);
-
-            outputText.value += response.result.result ? '\nParser succeeded. ' : '\nParser failed. ';
-            var rest = args.selectionEnd - response.result.position;
-            var m = ' byte';
-            if (rest > 1) {
-              m += 's'
-            }
-            outputText.value += (rest > 0) ? rest + m + ' of input left.\n' : 'All input consumed.\n';
-            if (response.result.result == true) {
-              outputText.value += '\nAttribute:\n';
-              outputText.value += JSON.stringify(response.result.attribute, 0, 2) + '\n\n';
-            }
-            resultStep = undefined;
-            response = undefined;
-          }
+          outputText.value = 'Single Step Parser started.\n\n';
+          intervalPlayer.init(nextStep, 500);
+          intervalPlayer.run();
+        })
+        .catch(function(error){
+          outputText.value += 'HTTP error. Returned status: ' + error + '\n';
           outputText.scrollTop = outputText.scrollHeight;
-        }, 500);
-      })
-      .catch(function(error){
-        outputText.value += 'HTTP error. Returned status: ' + error + '\n';
-        outputText.scrollTop = outputText.scrollHeight;
-      });
+        });
+    } else if (intervalPlayer.state == 'running') {
+      intervalPlayer.pause();
+    } else if (intervalPlayer.state == 'paused') {
+      intervalPlayer.resume();
+    }
   }
 
   var singleStepWorkspace = function() {
@@ -213,7 +283,6 @@ var mxcParsec = (function(app, undefined) {
 
   var runParser = function(args) {
     const call = jsonRpc('parse', args);
-    var outputText = document.getElementById('outputText');
     outputText.value = 'Parser started.\n\n';
     call
       .then(function handleResponse(r){
@@ -222,12 +291,10 @@ var mxcParsec = (function(app, undefined) {
           var success = response.result.result;
           var output = success ? 'Parser succeeded. ' : 'Parser failed. ';
           outputText.value += output;
-          var rest = args.selectionEnd - response.result.position;
+          var bytesLeft = response.result.bytesLeft;
           var m = ' byte';
-          if (rest > 1) {
-            m += 's'
-          }
-          outputText.value += (rest > 0) ? rest + m + ' of input left.\n' : 'All input consumed.\n';
+          if (bytesLeft > 1) m += 's';
+          outputText.value += (bytesLeft > 0) ? bytesLeft + m + ' of input left.\n' : 'All input consumed.\n';
           if (response.result.result == true) {
             outputText.value += '\nAttribute:\n';
             outputText.value += JSON.stringify(response.result.attribute, 0, 2) + '\n\n';
@@ -583,6 +650,9 @@ var mxcParsec = (function(app, undefined) {
    * Initialize Blockly. Called on page load.
    */
   var init = function() {
+    inputText = document.getElementById('inputText');
+    outputText = document.getElementById('outputText');
+
     initLanguage();
 
     var rtl = isRtl();
@@ -637,7 +707,7 @@ var mxcParsec = (function(app, undefined) {
       var toolboxXml = Blockly.Xml.textToDom(config.toolbox);
       app.workspace.updateToolbox(toolboxXml);
     }
-    document.getElementById('outputText').innerHTML = '';
+    outputText.innerHTML = '';
 
     // corrects parserNames Array if a rule or grammar block is deleted
     function onDeletionNameHandler(event) {
@@ -799,9 +869,6 @@ var mxcParsec = (function(app, undefined) {
 
   //highlighting of input Text
   var highlightText = function (indexFrom, indexTo, highlightType) {
-    var inputText = document.getElementById("inputText");
-    //var inputValue = inputText.value;
-
     indexFrom += resultIndexCorrection;
     indexTo += resultIndexCorrection;
 
@@ -814,7 +881,6 @@ var mxcParsec = (function(app, undefined) {
   }
 
   var unHighlightText = function(indexFrom) {
-    var inputText = document.getElementById("inputText");
     var inputValue = inputText.innerHTML;
 
     var indexStart1 = inputValue.indexOf("<span", indexFrom);
@@ -841,7 +907,7 @@ var mxcParsec = (function(app, undefined) {
   var call = jsonRpc('getInput', []);
   call
     .then(function(response) {
-      document.getElementById('inputText').innerHTML = response.result;
+      inputText.innerHTML = response.result;
     })
     .catch(function(error){
       outputText.value += 'HTTP error. Returned status: ' + error + '\n';
