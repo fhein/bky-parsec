@@ -1,4 +1,4 @@
-var Extensions = (function(Extensions, mxcParsec, undefined) {
+var Extensions = (function(Extensions, app, undefined) {
 
     /**
      * rule or grammar can be delteted if all references have been removed
@@ -13,7 +13,7 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
         }
         return false;
       }
-    
+
     /**
      * rule or grammar cannot be delteted if a reference exists
      */
@@ -47,6 +47,27 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
 
 
   var extensions = {
+
+      'register_context_menu' : function() {
+        var that = this;
+        this.customContextMenu = function(menuOptions) {
+          menuOptions.unshift({
+            enabled: true,
+            text: 'Test parser',
+            callback:function() {
+              app.singleStepBlock(that);
+            }
+          })
+          menuOptions.unshift({
+            enabled: true,
+            text: 'Run parser',
+            callback:function() {
+              app.runBlock(that);
+            }
+          })
+
+        }
+      },
       'register_generator': function() {
         var obj = parserGeneratorLink[this.type];
         this.data = obj.data;
@@ -63,7 +84,7 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
 
       // this extension generates the dropdown entries for the reference block
       'reference_dropdown': function() {
-        var dropdown = new Blockly.FieldDropdown(mxcParsec.dynamicReferenceOptions);
+        var dropdown = new Blockly.FieldDropdown(app.dynamicReferenceOptions);
         this.inputList[0].appendField(dropdown, 'PARAM1');
 
       },
@@ -72,15 +93,15 @@ var Extensions = (function(Extensions, mxcParsec, undefined) {
         var that = this;
         addChangeHandler(this, function(changeEvent) {
           var blockName = that.getFieldValue('PARAM1');
-          var eventType = changeEvent.type; 
+          var eventType = changeEvent.type;
           var blockID = that.id;
           var eventID = changeEvent.blockId;
 
-          
+
           if (blockID == eventID && that.isInFlyout == false) {
             if (eventType == Blockly.Events.CREATE || eventType == Blockly.Events.CHANGE) {
 
-              var allTopBlocks = mxcParsec.workspace.getTopBlocks(false);
+              var allTopBlocks = app.workspace.getTopBlocks(false);
 
               for (var topBlock of allTopBlocks) {
             	  //var result = setParserDeletable(topBlock);

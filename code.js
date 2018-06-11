@@ -25,7 +25,8 @@ var mxcParsec = (function(app, undefined) {
 
    var response;
    var input;
-   var singleStep;
+   var selectedRange;
+   var animation;
    var resultStep = undefined;
    var currentStep = -1;
    var resultIndexCorrection = 0;
@@ -84,8 +85,8 @@ var mxcParsec = (function(app, undefined) {
    */
   var LANGUAGE_RTL = ['ar', 'fa', 'he', 'lki'];
 
-  var prepareCode = function() {
-    var code = Blockly.PHP.workspaceToCode(app.workspace);
+  app.prepareCode = function(code) {
+    //var code = Blockly.PHP.workspaceToCode(app.workspace);
     if (code.length == 0) {
       return;
     }
@@ -104,15 +105,26 @@ var mxcParsec = (function(app, undefined) {
     };
   }
 
-  var prepareArgs = function() {
-    var args = prepareCode();
+  app.prepareArgs = function(code) {
+    var args = app.prepareCode(code);
     args.parser = JSON.parse(args.parser);
-    args.input = document.getElementById('inputText').innerHTML;
+    var inputText = document.getElementById('inputText');
+    args.input = inputText.innerHTML;
+    var sel = window.getSelection();
+    var range = sel.rangeCount ?  sel.getRangeAt(0) : null;
+    if (range) {
+      args.selectionStart = range.startOffset;
+      args.selectionEnd = range.endOffset > range.startOffset ? range.endOffset : inputText.innerText.length;
+    } else {
+      args.selectionStart = 0;
+      args.selectionEnd = inputText.innerText.length;
+    }
+    sel.removeAllRanges();
     return args;
   }
 
-  var stepParser = function() {
-    const call = jsonRpc('trace', prepareArgs());
+  var singleStep = function(args) {
+    const call = jsonRpc('trace', args);
     var outputText = document.getElementById('outputText');
     call
       .then(function(r){
@@ -124,7 +136,7 @@ var mxcParsec = (function(app, undefined) {
           return;
         }
         outputText.value = 'Single Step Parser started.\n\n'
-        singleStep = window.setInterval(function(){
+        var animation = window.setInterval(function(){
           if (!resultStep) {
             resultStep = 0;
           } else {
@@ -137,7 +149,6 @@ var mxcParsec = (function(app, undefined) {
           if (resultStep < response.result.actions.length){
             // do highlighting for current step
             var curStep = response.result.actions[resultStep];
-            console.log(curStep);
             //highlight blocks
             app.workspace.highlightBlock(curStep.block, true);
 
@@ -154,9 +165,10 @@ var mxcParsec = (function(app, undefined) {
             }
             resultStep++;
           } else {
-            window.clearInterval(singleStep);
+            window.clearInterval(animation);
+
             outputText.value += response.result.result ? '\nParser succeeded. ' : '\nParser failed. ';
-            var rest = document.getElementById('inputText').innerHTML.length - response.result.position;
+            var rest = args.selectionEnd - response.result.position;
             var m = ' byte';
             if (rest > 1) {
               m += 's'
@@ -170,7 +182,7 @@ var mxcParsec = (function(app, undefined) {
             response = undefined;
           }
           outputText.scrollTop = outputText.scrollHeight;
-        }, 700);
+        }, 500);
       })
       .catch(function(error){
         outputText.value += 'HTTP error. Returned status: ' + error + '\n';
@@ -178,8 +190,29 @@ var mxcParsec = (function(app, undefined) {
       });
   }
 
-  var runParser = function() {
-    const call = jsonRpc('parse', prepareArgs());
+  var singleStepWorkspace = function() {
+    singleStep(app.prepareArgs(Blockly.PHP.workspaceToCode(app.workspace)));
+  }
+
+  app.singleStepBlock = function(block) {
+    var code = Blockly.PHP.blockToCode(block);
+
+    // blockToCode returns the code of the current block AND ALL blocks connected downstream
+    // This is a nasty hack to get rid of the downstream block's code
+    if (code[0] !== '"') {
+      code = '['+code+']';
+      code = code.replace(/\,(?=\s*?[\}\]])/g, '');
+      code = JSON.parse(code);
+      code = JSON.stringify(code[0]);
+    }
+    // end of hack
+    //////
+
+    singleStep(app.prepareArgs(code));
+  }
+
+  var runParser = function(args) {
+    const call = jsonRpc('parse', args);
     var outputText = document.getElementById('outputText');
     outputText.value = 'Parser started.\n\n';
     call
@@ -189,7 +222,7 @@ var mxcParsec = (function(app, undefined) {
           var success = response.result.result;
           var output = success ? 'Parser succeeded. ' : 'Parser failed. ';
           outputText.value += output;
-          var rest = document.getElementById('inputText').innerHTML.length - response.result.position;
+          var rest = args.selectionEnd - response.result.position;
           var m = ' byte';
           if (rest > 1) {
             m += 's'
@@ -208,6 +241,32 @@ var mxcParsec = (function(app, undefined) {
       });
     outputText.scrollTop = outputText.scrollHeight;
   };
+
+  var runWorkspace = function() {
+    runParser(app.prepareArgs(Blockly.PHP.workspaceToCode(app.workspace)));
+  }
+
+  app.runBlock = function(block) {
+    var code = Blockly.PHP.blockToCode(block);
+
+    // blockToCode returns the code of the current block AND ALL blocks connected downstream
+    // This is a nasty hack to get rid of the downstream blocks's code
+    if (code[0] !== '"') {
+      // make array from comma separated blocks
+      code = '['+code+']';
+      // remove trailing commata
+      code = code.replace(/\,(?=\s*?[\}\]])/g, '');
+      // convert to object
+      code = JSON.parse(code);
+      // discard all but first element
+      // and convert it back to string
+      code = JSON.stringify(code[0]);
+    }
+    // end of hack
+    //////
+
+    runParser(app.prepareArgs(code));
+  }
 
   /**
    * Discard all blocks from the workspace.
@@ -480,7 +539,7 @@ var mxcParsec = (function(app, undefined) {
     var content = document.getElementById('content_' + selected);
     content.textContent = '';
     if (checkAllGeneratorFunctionsDefined(generator)) {
-      var args = prepareCode();
+      var args = app.prepareCode(Blockly.PHP.workspaceToCode(app.workspace));
       content.textContent = args.parser;
       if (typeof PR.prettyPrintOne == 'function') {
         code = content.textContent;
@@ -642,8 +701,8 @@ var mxcParsec = (function(app, undefined) {
       renderContent();
     });
 
-    bindClick('runButton', runParser);
-    bindClick('stepButton', stepParser)
+    bindClick('runButton', runWorkspace);
+    bindClick('stepButton', singleStepWorkspace)
     // Disable the link button if page isn't backed by App Engine storage.
     var linkButton = document.getElementById('linkButton');
     if ('BlocklyStorage' in window) {
