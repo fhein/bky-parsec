@@ -164,8 +164,9 @@ button {
 .icon21 {
   height: 21px;
   width: 21px;
-  background-image: url(icons.png);
+  font-size:16px;
 }
+/*
 .trash {
   background-position: 0px 0px;
 }
@@ -179,7 +180,7 @@ button {
 .step {
   background-position: -42px 0px;
 }
-
+*/
 .highlightTry {
   background-color: #9eb4d8;
 }

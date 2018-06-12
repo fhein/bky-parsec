@@ -5,6 +5,7 @@
   <meta name="google" value="notranslate">
   <title>Blockly:</title>
   <link rel="stylesheet" href="style.css">
+  <script defer src="https://use.fontawesome.com/releases/v5.0.13/js/all.js" integrity="sha384-xymdQtn1n3lH2wcu0qhcdaOpQwyoarkgLVxC/wZ5q7h9gHtxICrpcaSUfygqZGOe" crossorigin="anonymous"></script>
   <script src="../../appengine/storage.js"></script>
   <script src="../../blockly_compressed.js"></script>
   <script src="../../blocks_compressed.js"></script>
@@ -47,18 +48,24 @@
             <td class="tabmax">
               <!--button onclick="mxcParsec.result=[[['.e|DPX(6,*xX#7lvN71/'],[[0,1,0]],['T']],[['.e|DPX(6,*xX#7lvN71/'],[[0,1,0],[1,2,1]],['e']]];mxcParsec.nextStep();">Execute Step by Step</button-->
               <button id="trashButton" class="notext" title="...">
-                <img src="../../media/1x1.gif" class="trash icon21">
+                <i class="fas fa-trash fa-10x icon21"></i>
               </button>
               <button id="linkButton" class="notext" title="...">
-                <img src="../../media/1x1.gif" class="link icon21">
+                <i class="fas fa-link fa-10x icon21"></i>
               </button>
               <button id="runButton" class="notext primary" title="...">
-                <img src="../../media/1x1.gif" class="run icon21">
+                <i class="fas fa-play fa-10x icon21"></i>
+              </button>
+              <button id="playPauseButton" class="notext step" title="...">
+                <i id="playPauseIcon" class="fas fa-fast-forward fa-10x icon21"></i>
               </button>
               <button id="stepButton" class="notext step" title="...">
-                <img src="../../media/1x1.gif" class="step icon21">
+                <i class="fas fa-step-forward fa-10x icon21"></i>
               </button>
-            </td>
+              <button id="stopButton" class="notext step" title="...">
+                <i class="fas fa-stop fa-10x icon21"></i>
+              </button>
+             </td>
           </tr>
         </table>
       </td>

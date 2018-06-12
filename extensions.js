@@ -45,28 +45,58 @@ var Extensions = (function(Extensions, app, undefined) {
     block.addChangeHandler(handler);
   };
 
+  var setupCustomContextMenu = function(block) {
+    if (!block.customContextMenuOptions) {
+      block.customContextMenuOptions = [];
+    };
+    if (!block.customContextMenu) {
+      block.customContextMenu = function(menuOptions) {
+        for (var option of block.customContextMenuOptions) {
+          menuOptions.unshift(option);
+        }
+      }
+    }
+  }
 
   var extensions = {
-
-      'register_context_menu' : function() {
+      'register_test_run_option' : function() {
         var that = this;
-        this.customContextMenu = function(menuOptions) {
-          menuOptions.unshift({
+        setupCustomContextMenu(that);
+        this.customContextMenuOptions.unshift(
+          {
             enabled: true,
             text: 'Test parser',
             callback:function() {
-              app.singleStepBlock(that);
+              app.parserPlayer.play(that);
             }
-          })
-          menuOptions.unshift({
+          });
+        this.customContextMenuOptions.unshift(
+          {
             enabled: true,
             text: 'Run parser',
             callback:function() {
-              app.runBlock(that);
+              app.parserPlayer.run(that);
             }
-          })
 
-        }
+          });
+      },
+      'register_refcreate_option' : function() {
+        var that = this;
+        setupCustomContextMenu(that);
+        this.customContextMenuOptions.unshift(
+          {
+            enabled: true,
+            text: 'Create reference',
+            callback:function() {
+              var block = app.workspace.newBlock('reference_type');
+              block.setFieldValue(that.getFieldValue('PARAM1'), 'PARAM1');
+              var posXY = that.getRelativeToSurfaceXY();
+              block.moveBy(posXY.x+100, posXY.y);
+              block.initSvg();
+              block.render();
+            }
+
+          });
       },
       'register_generator': function() {
         var obj = parserGeneratorLink[this.type];
@@ -135,9 +165,9 @@ var Extensions = (function(Extensions, app, undefined) {
 
               case Blockly.Events.CREATE:
                 //check if blockname already exists
-                if (parserNames.length > 0) {
-                  if (parserNames.includes(blockName)) {
-                    while (parserNames.includes(blockName)) {
+                if (app.parserNames.length > 0) {
+                  if (app.parserNames.includes(blockName)) {
+                    while (app.parserNames.includes(blockName)) {
 
                       //compute new blockName
                       var i = 1;
@@ -155,28 +185,28 @@ var Extensions = (function(Extensions, app, undefined) {
 
                     }
                     that.setFieldValue(newName, 'PARAM1');
-                    if (!that.isInFlyout) parserNames.push(newName);
+                    if (!that.isInFlyout) app.parserNames.push(newName);
 
                   } else {
-                    if (!that.isInFlyout) parserNames.push(blockName);
+                    if (!that.isInFlyout) app.parserNames.push(blockName);
                   }
                 } else {
-                  if (!that.isInFlyout) parserNames.push(blockName);
+                  if (!that.isInFlyout) app.parserNames.push(blockName);
                 }
                 break;
 
               case Blockly.Events.CHANGE:
 
-                if (parserNames.length > 0 && !that.isInFlyout) {
+                if (app.parserNames.length > 0 && !that.isInFlyout) {
                   var oldV = changeEvent.oldValue;
                   var newV = changeEvent.newValue;
                   if (oldV != newV) {
-                    if (parserNames.includes(oldV)) {
-                      var i = parserNames.indexOf(oldV);
-                      parserNames.splice(i, 1);
+                    if (app.parserNames.includes(oldV)) {
+                      var i = app.parserNames.indexOf(oldV);
+                      app.parserNames.splice(i, 1);
                     }
-                    if (!parserNames.includes(newV)) {
-                      parserNames.push(newV);
+                    if (!app.parserNames.includes(newV)) {
+                      app.parserNames.push(newV);
                     }
                   }
                 }

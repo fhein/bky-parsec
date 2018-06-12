@@ -43,13 +43,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "rule",
           "name": "rule"
         },
-        {
-          "type": "grammar_type",
-          "proto": "grammar",
-          "generator": "grammar",
-          "data": "grammar",
-          "name": "grammar"
-        },
+//        {
+//          "type": "grammar_type",
+//          "proto": "grammar",
+//          "generator": "grammar",
+//          "data": "grammar",
+//          "name": "grammar"
+//        },
         {
           "type": "reference_type",
           "proto": "reference",
@@ -665,7 +665,7 @@ var Config = (function(Config, mxcParsec, undefined) {
           .addInput(0, {
             type: 'input_dummy'
           })
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option', ]);
         break;
 
       case 'single_parser':
@@ -678,7 +678,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'dual_parser':
@@ -698,7 +698,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'single_text_field':
@@ -709,7 +709,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'field_input',
             text: 'a'
           })
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'single_number_field':
@@ -720,7 +720,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'field_number',
             value: 0
           })
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'single_integer_value':
@@ -731,7 +731,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_value',
             check: ['integer_input', 'integer_all']
           })
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option', ]);
         break;
 
       case 'char_range':
@@ -745,7 +745,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             text: '9'
           })
           .addConnections(parser)
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'char_class':
@@ -768,7 +768,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             ]
           })
           .addConnections(parser)
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'binary_accept_all':
@@ -779,7 +779,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_value',
             check: [type + '_input', type + '_all']
           })
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'binary_input':
@@ -826,7 +826,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: "input_statement",
             check: "parser"
           }, '%%')
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'repeat_min_max':
@@ -848,7 +848,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             check: "parser"
           }, '%%')
           .inputsInline(true)
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'binary':
@@ -866,7 +866,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_value',
             check: ['binary_input', 'binary_all']
           }, '%%')
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'accept_all':
@@ -876,7 +876,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_value'
           })
           .inputsInline(true)
-          .setExtensions(['register_context_menu']);
+          .setExtensions(['register_test_run_option']);
         break;
 
       case 'grammar':
@@ -899,7 +899,7 @@ var Config = (function(Config, mxcParsec, undefined) {
               ['world', 'world']
             ]
           })
-          .setExtensions(['onchange_name_handler', 'register_context_menu']);
+          .setExtensions(['onchange_name_handler', 'register_test_run_option']);
         break;
 
       case 'rule':
@@ -915,14 +915,14 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .setExtensions(['onchange_name_handler', 'register_context_menu']);
+          .setExtensions(['onchange_name_handler', 'register_test_run_option', 'register_refcreate_option']);
         break;
 
       case 'reference':
         jbb
           .addConnections('reference')
           .addInput(0, {type:'input_dummy'})
-          .setExtensions(['reference_dropdown', 'handleTopBlockDeletions', 'register_context_menu']);
+          .setExtensions(['reference_dropdown', 'handleTopBlockDeletions', 'register_test_run_option' ]);
         break;
 
       default:

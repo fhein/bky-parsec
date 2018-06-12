@@ -5,7 +5,6 @@
 /**
  * Create a namespace for the application.
  */
-var parserNames = [];
 
 var mxcParsec = (function(app, undefined) {
 
@@ -17,6 +16,7 @@ var mxcParsec = (function(app, undefined) {
    * @type {Blockly.WorkspaceSvg}
    */
    app.workspace = null;
+   app.parserNames = [];
 
    var RESULT_CSS = [];
    RESULT_CSS['accept'] = "highlightAccept";
@@ -25,9 +25,7 @@ var mxcParsec = (function(app, undefined) {
 
    var response;
    var input;
-   var animation;
    var resultStep = undefined;
-   var currentStep = -1;
    var resultIndexCorrection = 0;
 
    var inputText;
@@ -63,10 +61,15 @@ var mxcParsec = (function(app, undefined) {
       http.onreadystatechange = function() {
         if (http.readyState == 4) {
           if (http.status == 200) {
-            //console.log(http.response);
-            resolve(JSON.parse(http.response))
+            console.log(http.response);
+            try {
+              var answer = JSON.parse(http.response)
+              resolve(answer);
+            } catch (e) {
+              reject(http.response);
+            }
           } else {
-            reject(http.status);
+            reject('HTTP error. Status: ' + http.status);
           }
         }
       }
@@ -111,6 +114,7 @@ var mxcParsec = (function(app, undefined) {
     var args = app.prepareCode(code);
     args.parser = JSON.parse(args.parser);
     args.input = inputText.innerHTML;
+    input = args.input;
     var sel = window.getSelection();
     var range = sel.rangeCount ?  sel.getRangeAt(0) : null;
     if (range) {
@@ -131,7 +135,8 @@ var mxcParsec = (function(app, undefined) {
       // remove highlighting of previous step
       var prevStep = response.result.actions[resultStep-1];
       app.workspace.highlightBlock(prevStep.block, false);
-      unHighlightText(prevStep.from);
+//      unHighlightText(prevStep.from);
+      removeTextHighlights();
     }
 
     if (resultStep < response.result.actions.length){
@@ -171,114 +176,166 @@ var mxcParsec = (function(app, undefined) {
     }
   }
 
-  var intervalPlayer = {
+  app.parserPlayer = {
     state: 'idle',
-    startTime: 0,
-    endTime: 0,
-    callback: null,
+    interval: 500,
 
-    init: function(callback, interval) {
-      this.interval = interval;
-      this.callback = callback;
-      this.startTime = 0;
-      this.endTime = 0;
-      this.state = 'idle';
-      resultStep = undefined;
-    },
-
-    dispatcher: function() {
-      if (intervalPlayer.callback()) intervalPlayer.stop();
+    dispatch: function() {
+      if (nextStep()) app.parserPlayer.stop();
     },
 
     stop: function() {
-      if (this.state == 'idle') return;
-      if (this.state == 'running') {
-        window.clearInterval(this.animation);
+      if (app.parserPlayer.state == 'idle') return;
+      if (app.parserPlayer.state == 'running') {
+        window.clearInterval(app.parserPlayer.animation);
       }
-      this.endTime = new Date();
+      var prevStep = response.result.actions[resultStep-1];
+      app.workspace.highlightBlock(prevStep.block, false);
+      removeTextHighlights();
+
       resultStep = undefined;
-      this.state = 'idle';
-      console.log(this.state);
+      response = undefined;
+      inputText.innerHTML = input;
+      app.parserPlayer.state = 'idle';
+      var icon = document.getElementById('playPauseIcon');
+      icon.classList.toggle("fa-fast-forward");
+      document.getElementById('playPauseButton').title = MSG['playTooltip'];
+
+      console.log(app.parserPlayer.state);
     },
 
     step: function() {
-      if (this.state != 'paused') return;
-      if (this.callback()) {
-        this.endTime = new Date();
-        this.state = 'idle';
+      if (app.parserPlayer.state != 'paused') return;
+      if (app.parserPlayer.callback()) {
+        app.parserPlayer.state = 'idle';
       }
     },
 
-    run: function() {
-      if (this.state != 'idle') return;
-      this.startTime = new Date();
-      this.animation = window.setInterval(this.dispatcher, this.interval);
-      this.state = 'running';
-      console.log(this.state);
+    getArgs: function(block) {
+      var code;
+      console.log(block);
+      if (block) {
+        code = Blockly.PHP.blockToCode(block);
+
+        // blockToCode returns the code of the current block AND ALL blocks connected downstream
+        // This is a nasty hack to get rid of the downstream block's code
+        if (code[0] !== '"') {
+          code = '['+code+']';
+          code = code.replace(/\,(?=\s*?[\}\]])/g, '');
+          code = JSON.parse(code);
+          code = JSON.stringify(code[0]);
+        }
+      } else {
+        code = Blockly.PHP.workspaceToCode(app.workspace);
+      }
+      return app.prepareArgs(code);
     },
 
-    resume: function() {
-      if (this.state != 'paused') return;
-      this.startTime = new Date();
-      this.animation = window.setInterval(this.dispatcher, this.interval);
-      this.state = 'running';
-      console.log(this.state);
+    rpc: function(method, args, callback) {
+
     },
 
-    pause: function() {
-      if (this.state != 'running') return;
-      window.clearInterval(this.animation);
-      this.state = 'paused';
-      console.log(this.state);
-    }
-  }
-
-  var singleStep = function(args) {
-    if (intervalPlayer.state == 'idle') {
-      const call = jsonRpc('trace', args);
+    play: function(block = null) {
+      if (app.parserPlayer.state != 'idle') {
+        app.parserPlayer.stop();
+      }
+      app.parserPlayer.state = 'running';
+      const call = jsonRpc('trace', app.parserPlayer.getArgs(block));
       call
         .then(function(r){
           response = r;
-          if (response.error) {
+          if (response.result) {
+            outputText.value = 'Single Step Parser started.\n\n';
+            app.parserPlayer.state = 'running';
+            app.parserPlayer.animation = window.setInterval(app.parserPlayer.dispatch, app.parserPlayer.interval);
+            var icon = document.getElementById('playPauseIcon');
+            icon.classList.toggle("fa-pause");
+            document.getElementById('playPauseButton').title = MSG['pauseTooltip'];
+          } else if (response.error) {
             var output = 'Error ['+ response.error.code + '] : ' + response.error.message + '\n';
             outputText.value += output;
-            outputText.scrollTop = outputText.scrollHeight;
-            return;
           }
-          outputText.value = 'Single Step Parser started.\n\n';
-          intervalPlayer.init(nextStep, 500);
-          intervalPlayer.run();
+          outputText.scrollTop = outputText.scrollHeight;
         })
         .catch(function(error){
-          outputText.value += 'HTTP error. Returned status: ' + error + '\n';
+          outputText.value += error;
           outputText.scrollTop = outputText.scrollHeight;
         });
-    } else if (intervalPlayer.state == 'running') {
-      intervalPlayer.pause();
-    } else if (intervalPlayer.state == 'paused') {
-      intervalPlayer.resume();
+      app.parserPlayer.state = 'idle';
+    },
+
+    runAll: function() {
+      app.parserPlayer.run();
+    },
+
+    run: function(block = null) {
+      if (app.parserPlayer.state != 'idle') {
+        app.parserPlayer.stop();
+      }
+      outputText.value = 'Parser started.\n\n';
+      const call = jsonRpc('parse', app.parserPlayer.getArgs(block));
+      call
+        .then(function(r){
+          response = r;
+          if (response.result) {
+            var success = response.result.result;
+            var output = success ? 'Parser succeeded. ' : 'Parser failed. ';
+            outputText.value += output;
+            var bytesLeft = response.result.bytesLeft;
+            var m = ' byte';
+            if (bytesLeft > 1) m += 's';
+            outputText.value += (bytesLeft > 0) ? bytesLeft + m + ' of input left.\n' : 'All input consumed.\n';
+            if (response.result.result == true) {
+              outputText.value += '\nAttribute:\n';
+              outputText.value += JSON.stringify(response.result.attribute, 0, 2) + '\n\n';
+            }
+          } else if (response.error) {
+            outputText.value += 'Error ['+ response.error.code + '] : ' + response.error.message + '\n';
+          }
+        })
+        .catch(function(error){
+          outputText.value = error;
+        });
+      outputText.scrollTop = outputText.scrollHeight;
+      app.parserPlayer.state = 'idle';
+    },
+
+    resume: function() {
+      if (app.parserPlayer.state != 'paused') return;
+      app.parserPlayer.animation = window.setInterval(app.parserPlayer.dispatch, app.parserPlayer.interval);
+      app.parserPlayer.state = 'running';
+      console.log(app.parserPlayer.state);
+    },
+
+    pause: function() {
+      if (app.parserPlayer.state != 'running') return;
+      window.clearInterval(app.parserPlayer.animation);
+      app.parserPlayer.state = 'paused';
+      console.log(app.parserPlayer.state);
+    }
+  }
+
+  var singleStep = function(block = null) {
+    if (app.parserPlayer.state == 'idle') {
+      app.parserPlayer.play(block);
+    } else if (app.parserPlayer.state == 'running') {
+      app.parserPlayer.pause();
+      var icon = document.getElementById('playPauseIcon');
+      icon.classList.toggle("fa-redo")
+      document.getElementById('playPauseButton').title = MSG['resumeTooltip'];
+    } else if (app.parserPlayer.state == 'paused') {
+      var icon = document.getElementById('playPauseIcon');
+      icon.classList.toggle("fa-pause")
+      app.parserPlayer.resume();
     }
   }
 
   var singleStepWorkspace = function() {
-    singleStep(app.prepareArgs(Blockly.PHP.workspaceToCode(app.workspace)));
+    singleStep();
   }
 
-  app.singleStepBlock = function(block) {
-    var code = Blockly.PHP.blockToCode(block);
-
-    // blockToCode returns the code of the current block AND ALL blocks connected downstream
-    // This is a nasty hack to get rid of the downstream block's code
-    if (code[0] !== '"') {
-      code = '['+code+']';
-      code = code.replace(/\,(?=\s*?[\}\]])/g, '');
-      code = JSON.parse(code);
-      code = JSON.stringify(code[0]);
-    }
-    // end of hack
-    //////
-
-    singleStep(app.prepareArgs(code));
+  var runWorkspace = function() {
+    app.parserPlayer.run();
   }
 
   var runParser = function(args) {
@@ -309,31 +366,6 @@ var mxcParsec = (function(app, undefined) {
     outputText.scrollTop = outputText.scrollHeight;
   };
 
-  var runWorkspace = function() {
-    runParser(app.prepareArgs(Blockly.PHP.workspaceToCode(app.workspace)));
-  }
-
-  app.runBlock = function(block) {
-    var code = Blockly.PHP.blockToCode(block);
-
-    // blockToCode returns the code of the current block AND ALL blocks connected downstream
-    // This is a nasty hack to get rid of the downstream blocks's code
-    if (code[0] !== '"') {
-      // make array from comma separated blocks
-      code = '['+code+']';
-      // remove trailing commata
-      code = code.replace(/\,(?=\s*?[\}\]])/g, '');
-      // convert to object
-      code = JSON.parse(code);
-      // discard all but first element
-      // and convert it back to string
-      code = JSON.stringify(code[0]);
-    }
-    // end of hack
-    //////
-
-    runParser(app.prepareArgs(code));
-  }
 
   /**
    * Discard all blocks from the workspace.
@@ -709,7 +741,7 @@ var mxcParsec = (function(app, undefined) {
     }
     outputText.innerHTML = '';
 
-    // corrects parserNames Array if a rule or grammar block is deleted
+    // corrects app.parserNames Array if a rule or grammar block is deleted
     function onDeletionNameHandler(event) {
       if (event.type == Blockly.Events.DELETE) {
 
@@ -723,9 +755,9 @@ var mxcParsec = (function(app, undefined) {
         if (blockType == "rule_type" || blockType == "grammar_type") {
           var blockField = blockHtml[0].children[0];
           var blockName = blockField.innerHTML;
-          if (parserNames.includes(blockName)) {
-            var i = parserNames.indexOf(blockName);
-            parserNames.splice(i, 1);
+          if (app.parserNames.includes(blockName)) {
+            var i = app.parserNames.indexOf(blockName);
+            app.parserNames.splice(i, 1);
           }
         }
 
@@ -771,8 +803,9 @@ var mxcParsec = (function(app, undefined) {
       renderContent();
     });
 
-    bindClick('runButton', runWorkspace);
-    bindClick('stepButton', singleStepWorkspace)
+    bindClick('runButton', app.parserPlayer.runAll);
+    bindClick('playPauseButton', singleStepWorkspace);
+    bindClick('stopButton', app.parserPlayer.stop);
     // Disable the link button if page isn't backed by App Engine storage.
     var linkButton = document.getElementById('linkButton');
     if ('BlocklyStorage' in window) {
@@ -844,16 +877,18 @@ var mxcParsec = (function(app, undefined) {
 
     document.getElementById('linkButton').title = MSG['linkTooltip'];
     document.getElementById('runButton').title = MSG['runTooltip'];
-    document.getElementById('stepButton').title = MSG['stepTooltip'];
+    document.getElementById('playPauseButton').title = MSG['playTooltip'];
     document.getElementById('trashButton').title = MSG['trashTooltip'];
+    document.getElementById('stopButton').title = MSG['stopTooltip'];
+    document.getElementById('stepButton').title = MSG['stepTooltip'];
   };
 
   app.dynamicReferenceOptions = function() {
     var options = [];
-    for (var option of parserNames) {
+    for (var option of app.parserNames) {
       options.push([option, option]);
     }
-    if (parserNames.length == 0) {
+    if (app.parserNames.length == 0) {
       options = [
         ['please create a parser first', 'error']
       ];
@@ -878,6 +913,11 @@ var mxcParsec = (function(app, undefined) {
       inputText.innerHTML = newValue;
       resultIndexCorrection += (newValue.length - inputValue.length);
     }
+  }
+
+  var removeTextHighlights = function() {
+    inputText.innerHTML = inputText.innerHTML.replace(/<span.*>(.*)<\/span>/g, '$1');
+    resultIndexCorrection = 0;
   }
 
   var unHighlightText = function(indexFrom) {
