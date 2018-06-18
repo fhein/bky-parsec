@@ -25,7 +25,7 @@
     <tr style="height: 5%">
       <td style="width: 40%">
         <h1><a href="https://developers.google.com/blockly/">Blockly</a>&rlm; &gt;
-          <a href="../index.html">Demos</a>&rlm; &gt;
+          <!--<a href="../index.html">Demos</a>&rlm; &gt;-->
           <span id="title">...</span>
         </h1>
       </td>
@@ -59,13 +59,16 @@
               <button id="runButton" class="notext primary" title="...">
                 <i class="fas fa-play fa-10x icon21"></i>
               </button>
-              <button id="playPauseButton" class="notext step" title="...">
+              <button id="debugButton" class="notext debug" title="...">
+                <i class="fas fa-play fa-10x icon21"></i>
+              </button>
+              <button id="playPauseButton" class="notext debug" title="...">
                 <i id="playPauseIcon" class="fas fa-fast-forward fa-10x icon21"></i>
               </button>
-              <button id="stepButton" class="notext step" title="...">
+              <button id="stepButton" class="notext debug" title="...">
                 <i class="fas fa-step-forward fa-10x icon21"></i>
               </button>
-              <button id="stopButton" class="notext step" title="...">
+              <button id="stopButton" class="notext debug" title="...">
                 <i class="fas fa-stop fa-10x icon21"></i>
               </button>
              </td>
@@ -77,11 +80,7 @@
     <tr style="height: 62%">
       <td colspan=3  id="content_area">
       </td>
-<!--       <td >
-          <div contenteditable="true" id="inputText" style="display: inline-block; height: 100%; max-height: 600px; width: 100%; overflow: auto;"></div>
-          textarea id="inputText2" style="display: inline-block; height: 100px; width: 100px;"></textarea
-      </td>
- -->    </tr>
+    </tr>
     <tr style="height: 30%;">
       <td colspan="1">
           <textarea id="outputText" disabled="disabled" style="display: inline-block; height: 100%; width: 98%;">
@@ -89,7 +88,6 @@
       </td>
       <td colspan="2">
           <div contenteditable="true" id="inputText" style="display: inline-block; height: 100%; max-height: 600px; width: 100%; overflow: auto;"></div>
-          <!--textarea id="inputText2" style="display: inline-block; height: 100px; width: 100px;"></textarea-->
       </td>
     </tr>
   </table>

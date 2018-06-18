@@ -35,12 +35,12 @@ button.primary {
 button.primary>img {
   opacity: 1;
 }
-button.step {
+button.debug {
   border: 1px solid #123456;
   background-color: #123456;
   color: #aaa;
 }
-button.step>img {
+button.debug>img {
   opacity: 1;
 }
 button>img {
@@ -166,21 +166,6 @@ button {
   width: 21px;
   font-size:16px;
 }
-/*
-.trash {
-  background-position: 0px 0px;
-}
-.link {
-  background-position: -21px 0px;
-}
-.run {
-  background-position: -42px 0px;
-}
-
-.step {
-  background-position: -42px 0px;
-}
-*/
 .highlightTry {
   background-color: #9eb4d8;
 }

@@ -678,7 +678,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option']);
         break;
 
       case 'dual_parser':
@@ -698,7 +698,7 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option']);
         break;
 
       case 'single_text_field':

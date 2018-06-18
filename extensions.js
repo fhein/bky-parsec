@@ -1,4 +1,4 @@
-var Extensions = (function(Extensions, app, undefined) {
+var Extensions = (function(Extensions, player, app, undefined) {
 
     /**
      * rule or grammar can be delteted if all references have been removed
@@ -67,7 +67,7 @@ var Extensions = (function(Extensions, app, undefined) {
             enabled: true,
             text: 'Test parser',
             callback:function() {
-              app.parserPlayer.play(that);
+              player.playPause(that);
             }
           });
         this.customContextMenuOptions.unshift(
@@ -75,7 +75,20 @@ var Extensions = (function(Extensions, app, undefined) {
             enabled: true,
             text: 'Run parser',
             callback:function() {
-              app.parserPlayer.run(that);
+              player.run(that);
+            }
+
+          });
+      },
+      'register_togglebreakpoint_option': function() {
+        var that = this;
+        setupCustomContextMenu(that);
+        this.customContextMenuOptions.unshift(
+          {
+            enabled: true,
+            text: 'Toggle breakpoint',
+            callback : function() {
+              player.toggleBreakpoint(that);
             }
 
           });
@@ -313,6 +326,6 @@ var Extensions = (function(Extensions, app, undefined) {
 
     return Extensions;
 
-  })(Extensions || {}, mxcParsec);
+  })(Extensions || {}, Player, mxcParsec);
 
 console.log('Public interface of Extensions:', Extensions);

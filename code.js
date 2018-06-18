@@ -173,18 +173,6 @@ var mxcParsec = (function (app, rpc, undefined) {
   };
 
   /**
-   * Load the Prettify CSS and JavaScript.
-   */
-  var importPrettify = function () {
-    var script = document.createElement('script');
-    script
-      .setAttribute(
-        'src',
-        'https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js');
-    document.head.appendChild(script);
-  };
-
-  /**
    * Compute the absolute coordinates and dimensions of an HTML element.
    *
    * @param {!Element}
@@ -294,7 +282,7 @@ var mxcParsec = (function (app, rpc, undefined) {
       xmlTextarea.value = xmlText;
       xmlTextarea.focus();
     } else if (content.id == 'content_php') {
-      attemptCodeGeneration(Blockly.PHP, 'php');
+      attemptCodeGeneration(Blockly.PHP, 'js');
     }
   };
 
@@ -306,17 +294,11 @@ var mxcParsec = (function (app, rpc, undefined) {
    * @param prettyPrintType
    *          {string} The file type key for the pretty printer.
    */
-  var attemptCodeGeneration = function (generator, prettyPrintType) {
+  var attemptCodeGeneration = function (generator) {
     var content = document.getElementById('content_' + selected);
-    content.textContent = '';
     if (checkAllGeneratorFunctionsDefined(generator)) {
       var args = Player.prepareCode(Blockly.PHP.workspaceToCode(app.workspace));
-      content.textContent = args.parser;
-      if (typeof PR.prettyPrintOne == 'function') {
-        var code = content.textContent;
-        code = PR.prettyPrintOne(code, prettyPrintType);
-        content.innerHTML = code;
-      }
+      content.innerHTML = JSON.stringify(JSON.parse(args.parser), null, 2);
     }
   };
 
@@ -474,6 +456,7 @@ var mxcParsec = (function (app, rpc, undefined) {
       renderContent();
     });
     bindClick('runButton', function () { Player.run(); });
+    bindClick('debugButton', function () { Player.debug(); });
     bindClick('playPauseButton', function () { Player.playPause(); });
     bindClick('stopButton', Player.stop);
     bindClick('stepButton', function () { Player.step(); });
@@ -502,9 +485,6 @@ var mxcParsec = (function (app, rpc, undefined) {
     }
     onresize();
     Blockly.svgResize(app.workspace);
-
-    // Lazy-load the syntax-highlighting.
-    window.setTimeout(importPrettify, 1);
   };
 
   /**

@@ -1,5 +1,5 @@
 var MSG = {
-  title: "Code",
+  title: "mxc-parsec",
   blocks: "Bausteine",
   linkTooltip: "Speichern und auf Bausteine verlinken.",
   runTooltip: "Das Programm ausführen, das von den Bausteinen im Arbeitsbereich definiert ist.",

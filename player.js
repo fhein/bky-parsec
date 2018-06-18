@@ -1,53 +1,62 @@
 'use strict';
 
-var Player = (function (player, rpc, highlight, app, undefined) {
+var Player = (function (player, rpc, textHighlight, app, undefined) {
   var state = 'idle';
 
   var interval = 500;
   var animation = false;
-  var resultStep = undefined;
+  var response = undefined;
+  var cStepIdx = undefined;
+  var references = [];
+  var breakpoints = {};
 
-  var response;
-  var resultStep = undefined;
-  var resultIndexCorrection = 0;
+  var setupResponse = function(res) {
+    response = res;
+  }
+
+  var nextBreakpoint = function() {}
 
   var nextStep = function () {
-    if (!resultStep) {
-      resultStep = 0;
-    } else {
+    var pStep;
+    if (!cStepIdx) cStepIdx = 0;
+    var last = response.result.actions.length;
+    var cStep = cStepIdx <  last ? response.result.actions[cStepIdx] : null;
+
+    if (cStepIdx > 0) {
       // remove highlighting of previous step
-      var prevStep = response.result.actions[resultStep - 1];
-      app.workspace.highlightBlock(prevStep.block, false);
-      // highlight.remove(prevStep.from);
-      highlight.remove();
+      pStep = response.result.actions[cStepIdx - 1];
+      var prevBlock = app.workspace.getBlockById(pStep.block);
+      if (!cStep || prevBlock.type != 'reference_type' || app.workspace.getBlockById(cStep.block).type != 'rule_type') {
+        app.workspace.highlightBlock(pStep.block, false);
+      }
+      if (prevBlock.type == 'reference_type') {
+          references.push(pStep.block);
+      }
+      // textHighlight.remove(pStep.from);
+      textHighlight.remove();
     }
 
-    if (resultStep < response.result.actions.length) {
-
-      // do highlighting for current step
-      var curStep = response.result.actions[resultStep];
-
-      //highlight blocks
-      app.workspace.highlightBlock(curStep.block, true);
-
-      //highlight text
-      highlight.set(curStep.from, curStep.to, curStep.action);
-
-      // output
-      if (curStep.output && curStep.output.length != 0) {
-        outputText.value += curStep.output;
-        if (curStep.action == 'accept') {
-          outputText.value += ', attribute: ' + curStep.attribute;
-        }
-        outputText.value += '\n';
-      }
-      resultStep++;
-      outputText.scrollTop = outputText.scrollHeight;
-      return false;
-    } else {
-      displayParserResult(response)
+    if (!cStep) {
       return true;
     }
+
+    //highlight blocks
+    app.workspace.highlightBlock(cStep.block, true);
+
+    //highlight text
+    textHighlight.set(cStep.from, cStep.to, cStep.action);
+
+    // output
+    if (cStep.output && cStep.output.length != 0) {
+      outputText.value += cStep.output;
+      if (cStep.action == 'accept') {
+        outputText.value += ', attribute: ' + cStep.attribute;
+      }
+      outputText.value += '\n';
+    }
+    cStepIdx++;
+    outputText.scrollTop = outputText.scrollHeight;
+    return false;
   }
 
   player.prepareCode = function (code) {
@@ -76,14 +85,17 @@ var Player = (function (player, rpc, highlight, app, undefined) {
     }
     outputText.value += '\nParser stopped.\n';
     outputText.scrollTop = outputText.scrollHeight;
-
-    var prevStep = response.result.actions[resultStep - 1];
-    if (prevStep) {
-      app.workspace.highlightBlock(prevStep.block, false);
+    var pStep = response.result.actions[cStepIdx - 1];
+    if (pStep) {
+      app.workspace.highlightBlock(pStep.block, false);
     }
-    highlight.remove();
+    for (var reference of references) {
+      app.workspace.highlightBlock(reference, false);
+    }
+    textHighlight.remove();
 
-    resultStep = undefined;
+    references = [];
+    cStepIdx = undefined;
     state = 'idle';
     document.getElementById('playPauseIcon').classList.toggle("fa-fast-forward");
     document.getElementById('playPauseButton').title = MSG['playTooltip'];
@@ -120,11 +132,15 @@ var Player = (function (player, rpc, highlight, app, undefined) {
     return args;
   };
 
-  var animate = function(r) {
-    response = r;
-    outputText.value = 'Single Step Parser started.\n\n';
+  var animate = function() {
+    outputText.value = 'Parser Debugger started.\n\n';
     outputText.scrollTop = outputText.scrollHeight;
-    animation = window.setInterval(function() {if (nextStep()) player.stop(); }, interval);
+    animation = window.setInterval(
+      function() {
+        if (nextStep()) {
+          player.stop(); 
+        }
+      }, interval)
   };
 
   var handleError = function (error) {
@@ -132,7 +148,17 @@ var Player = (function (player, rpc, highlight, app, undefined) {
     outputText.scrollTop = outputText.scrollHeight;
   };
 
-  var displayParserResult = function(response) {
+  player.toggleBreakpoint = function(block) {
+    if (breakpoints[block.id]) {
+      block.setColour(breakpoints[block.id]);
+      breakpoints[block.id] = undefined;
+    } else {
+      breakpoints[block.id] = block.getColour();
+      block.setColour(0);
+    }
+  }
+
+  var displayParserResult = function() {
     var success = response.result.result;
     var output = success ? '\nParser succeeded. ' : 'Parser failed. ';
     outputText.value += output;
@@ -147,13 +173,43 @@ var Player = (function (player, rpc, highlight, app, undefined) {
     outputText.scrollTop = outputText.scrollHeight;
   };
 
+  var displayBreakpoint = function () {
+    outputText.value += cStepIdx + '\n';
+    return;
+  }
+
+  player.debug = function(block = null) {
+    switch (state) {
+      case 'idle':
+        state = 'running';
+        rpc.call('trace', getArgs(block))
+          .then(setupResponse)
+          .then(animate)
+          .then(pause)
+          .catch(handleError);
+        break;
+
+      case 'paused':
+        if (nextStep()) {
+          displayParserResult();
+          player.stop();
+        }
+        break;
+
+      case 'running':
+        pause();
+        break;
+    }
+  };
+
   player.run = function (block = null) {
     if (state != 'idle') {
       player.stop();
     }
-    highlight.remove();
+    textHighlight.remove();
     outputText.value = 'Parser started.\n';
     rpc.call('parse', getArgs(block))
+      .then(setupResponse)
       .then(displayParserResult)
       .catch(handleError);
     state = 'idle';
@@ -164,13 +220,17 @@ var Player = (function (player, rpc, highlight, app, undefined) {
       case 'idle':
         state = 'running';
         rpc.call('trace', getArgs(block))
+          .then(setupResponse)
           .then(animate)
           .then(pause)
           .catch(handleError);
         break;
 
       case 'paused':
-        if (nextStep()) player.stop();
+        if (nextStep()) {
+          displayParserResult();
+          player.stop();
+        }
         break;
 
       case 'running':
@@ -183,10 +243,11 @@ var Player = (function (player, rpc, highlight, app, undefined) {
     if (state != 'idle') {
       player.stop();
     }
-    highlight.remove();
+    textHighlight.remove();
     state = 'running';
     const call = rpc.call('trace', getArgs(block));
     call
+      .then(setupResponse)
       .then(animate)
       .then(function(r) {
         document.getElementById('playPauseIcon').classList.toggle("fa-pause");
@@ -206,7 +267,13 @@ var Player = (function (player, rpc, highlight, app, undefined) {
 
   player.resume = function () {
     if (state != 'paused') return;
-    animation = window.setInterval(function() {if (nextStep()) player.stop(); }, interval);
+    animation = window.setInterval(
+      function() {
+        if (nextStep()) 
+          player.stop(); 
+      }, 
+      interval
+    );
     state = 'running';
     document.getElementById('playPauseIcon').classList.toggle("fa-pause")
     console.log(state);

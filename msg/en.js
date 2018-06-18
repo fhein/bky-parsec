@@ -36,7 +36,7 @@
     catLoops: "Sequence & Loops",
     //----------------------------------------------------
     // parsec category colours
-    catRuleHue: "350",
+    catRuleHue: "240",
     catDirectiveHue: "225",
     catLoopsHue: "215",
     catLogicHue: "205",
@@ -228,7 +228,7 @@
     blockRepeatMsg1: "repeat",
     blockRepeatMsg2: "times",
     blockRuleMsg1: "rule",
-    blockReferenceMsg1: "reference to",
+    blockReferenceMsg1: "apply",
     blockSequenceMsg1: "sequence of",
     blockSequentialOrMsg1: "sequential or",
     blockShortMsg1: "short",
