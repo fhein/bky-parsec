@@ -298,7 +298,8 @@ var mxcParsec = (function (app, rpc, undefined) {
     var content = document.getElementById('content_' + selected);
     if (checkAllGeneratorFunctionsDefined(generator)) {
       var args = Player.prepareCode(Blockly.PHP.workspaceToCode(app.workspace));
-      content.innerHTML = JSON.stringify(JSON.parse(args.parser), null, 2);
+      
+      content.innerHTML = args ? JSON.stringify(JSON.parse(args.parser), null, 2) : '';
     }
   };
 
@@ -442,6 +443,8 @@ var mxcParsec = (function (app, rpc, undefined) {
 
     // Register only the extensions actually used by blocks
     Extensions.init(config.extensions);
+    // Register only the mutators actually used by blocks
+    Mutators.init(config.mutators);
     loadBlocks('');
 
     if ('BlocklyStorage' in window) {
@@ -533,6 +536,7 @@ var mxcParsec = (function (app, rpc, undefined) {
     document.getElementById('trashButton').title = MSG['trashTooltip'];
     document.getElementById('stopButton').title = MSG['stopTooltip'];
     document.getElementById('stepButton').title = MSG['stepTooltip'];
+    document.getElementById('debugButton').title = MSG['debugTooltip'];
   };
 
   app.dynamicReferenceOptions = function () {

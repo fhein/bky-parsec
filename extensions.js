@@ -318,11 +318,9 @@ var Extensions = (function(Extensions, player, app, undefined) {
       }
     };
 
-
     Extensions.linkParserToGenerator = function(bType, assoc) {
       parserGeneratorLink[bType] = assoc;
     };
-
 
     return Extensions;
 

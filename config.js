@@ -6,12 +6,15 @@ var Config = (function(Config, mxcParsec, undefined) {
     return {
       toolbox: getToolbox(),
       blocks: getBlocks(),
-      extensions: extensions
+      extensions: extensions,
+      mutators: mutators
     };
   }
 
   var defaultExtensions = ['register_generator'];
+  var defaultMutators = [];
   var extensions = [];
+  var mutators = [];
 
   var shadows = {
     'byteShadow': [
@@ -651,7 +654,7 @@ var Config = (function(Config, mxcParsec, undefined) {
     ]
   };
 
-  var jbb = new JsonBlockBuilder(defaultExtensions);
+  var jbb = new JsonBlockBuilder(defaultExtensions, defaultMutators);
 
   var createBlock = function(setup) {
     jbb.create(setup);
@@ -678,7 +681,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option'])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'dual_parser':
@@ -698,7 +702,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option'])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'single_text_field':
@@ -957,6 +962,9 @@ var Config = (function(Config, mxcParsec, undefined) {
         if (jsonBlock.extensions) {
           extensions = [...new Set([...jsonBlock.extensions, ...extensions])];
         }
+        if (jsonBlock.mutator) {
+          mutators = [...new Set([jsonBlock.mutator, ...mutators])];
+        }
 
         // if (setup.proto === 'repeat_min_max') {
         // console.log(this.createBlock(setup));
@@ -964,6 +972,7 @@ var Config = (function(Config, mxcParsec, undefined) {
       }
     }
     console.log('Extensions in use: ' + JSON.stringify(extensions));
+    console.log('Mutators in use: ' + JSON.stringify(mutators));
     return json;
   }
 

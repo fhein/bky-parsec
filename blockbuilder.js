@@ -54,6 +54,13 @@ JsonBlockBuilder.prototype.setExtensions = function(extensions) {
   return this;
 }
 
+JsonBlockBuilder.prototype.setMutator = function(mutator) {
+  if (mutator) {
+    this.block.mutator = mutator;
+  }
+  return this;
+}
+
 JsonBlockBuilder.prototype.getExtensions = function() {
   return this.extensions;
 }

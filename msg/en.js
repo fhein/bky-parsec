@@ -8,6 +8,7 @@
     resumeTooltip: "Resume program animation.",
     stepTooltip: "Single step through the program defined by the blocks in the workspace.",
     stopTooltip: "Stop and reset the program.",
+    debugTooltip: "Run to next breakpoint.",
     badCode: "Program error:\n%1",
     timeout: "Maximum execution iterations exceeded.",
     trashTooltip: "Discard all blocks.",
