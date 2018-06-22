@@ -11,8 +11,7 @@ var mxcParsec = (function (app, rpc, undefined) {
    * @type {Blockly.WorkspaceSvg}
    */
   app.workspace = null;
-  app.parserNames = [];
-
+  
   var inputText;
   var outputText;
 
@@ -333,13 +332,25 @@ var mxcParsec = (function (app, rpc, undefined) {
     return true;
   };
 
+  var getInputFile = function() {
+    rpc.call('getInput', [])
+    .then(function (response) {
+      inputText.innerHTML = response.result;
+    })
+    .catch(function (error) {
+      outputText.value += error + '\n';
+      outputText.scrollTop = outputText.scrollHeight;
+    });
+  }
+
   /**
    * Initialize Blockly. Called on page load.
    */
   var init = function () {
     inputText = document.getElementById('inputText');
     outputText = document.getElementById('outputText');
-  
+
+    getInputFile();
     initLanguage();
 
     var rtl = isRtl();
@@ -396,50 +407,8 @@ var mxcParsec = (function (app, rpc, undefined) {
     }
     outputText.innerHTML = '';
 
-    // corrects app.parserNames Array if a rule or grammar block is deleted
-    function onDeletionNameHandler(event) {
-      if (event.type == Blockly.Events.DELETE) {
-
-        var parser = new DOMParser();
-
-        var blockXML = event.oldXml.outerHTML;
-        var doc = parser.parseFromString(blockXML, "text/html");
-        var blockHtml = doc.getElementsByTagName("block");
-        var blockType = blockHtml[0].getAttribute("type");
-
-        if (blockType == "rule_type" || blockType == "grammar_type") {
-          var blockField = blockHtml[0].children[0];
-          var blockName = blockField.innerHTML;
-          if (app.parserNames.includes(blockName)) {
-            var i = app.parserNames.indexOf(blockName);
-            app.parserNames.splice(i, 1);
-          }
-        }
-
-        if (blockType == "reference_type") {
-          var allTopBlocks = app.workspace.getTopBlocks(false);
-
-          var blockField = blockHtml[0].children[0];
-          var blockName = blockField.innerHTML;
-
-          for (var topBlock of allTopBlocks) {
-            var topBlockName = topBlock.getFieldValue('PARAM1');
-
-            if (topBlockName == blockName) {
-              if (topBlock.type == "rule_type" || topBlock.type == "grammar_type") {
-                topBlock.referenceCount--;
-                if (topBlock.referenceCount == 0) {
-                  topBlock.setDeletable(true);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-
     app.workspace.configureContextMenu = customContextMenuFn;
-    app.workspace.addChangeListener(onDeletionNameHandler);
+    app.workspace.addChangeListener(Extensions.onDeleteNonterminalOrReference);
 
     // Register only the extensions actually used by blocks
     Extensions.init(config.extensions);
@@ -539,40 +508,11 @@ var mxcParsec = (function (app, rpc, undefined) {
     document.getElementById('debugButton').title = MSG['debugTooltip'];
   };
 
-  app.dynamicReferenceOptions = function () {
-    var options = [];
-    for (var option of app.parserNames) {
-      options.push([option, option]);
-    }
-    if (app.parserNames.length == 0) {
-      options = [
-        ['please create a parser first', 'error']
-      ];
-    }
-    return options;
-  }
-
-  //mxParsec.workspace.addChangeListener(checkForDeletion);
-  //Blockly.workspace.addChangeListener(checkForDeletion);
-  app.checkForDeletion = function () {
-    var test = this;
-  }
-
   // Load the cpde demo's language strings.
   document.write('<script src="msg/' + LANG + '.js"></script>\n');
   // Load Blockly's language strings.
   document.write('<script src="../../msg/js/' + LANG + '.js"></script>\n');
   window.addEventListener('load', init);
-
-  var call = rpc.call('getInput', []);
-  call
-    .then(function (response) {
-      inputText.innerHTML = response.result;
-    })
-    .catch(function (error) {
-      outputText.value += error + '\n';
-      outputText.scrollTop = outputText.scrollHeight;
-    });
 
   return app;
 

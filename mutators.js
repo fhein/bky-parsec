@@ -2,8 +2,6 @@ var Mutators = (function(Mutators, player, undefined) {
 
   var mutators = {
     'breakpoint_mutator': {
-      breakpoint: false,
-
       mutationToDom: function() {
         var container = document.createElement('mutation');
         container.setAttribute('breakpoint', this.breakpoint)
@@ -11,10 +9,7 @@ var Mutators = (function(Mutators, player, undefined) {
       },
       domToMutation: function(xmlElement) {
         this.stdColor = this.getColour();
-        
-        // console.log('Hallöle');
-        player.setBreakpoint(this, xmlElement.getAttribute('breakpoint'));
-
+        player.setBreakpoint(this, xmlElement.getAttribute('breakpoint') == "true");
       }
     }
   };

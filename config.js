@@ -1,6 +1,6 @@
-var Config = (function(Config, mxcParsec, undefined) {
+var Config = (function (Config, mxcParsec, undefined) {
 
-  Config.setup = function() {
+  Config.setup = function () {
     // this.mergeGenerators();
     setupMessages();
     return {
@@ -9,6 +9,11 @@ var Config = (function(Config, mxcParsec, undefined) {
       extensions: extensions,
       mutators: mutators
     };
+  }
+
+  Config.enableReferenceType = function(state) {
+    var toolbox = getToolbox();
+    console.log(toolbox);
   }
 
   var defaultExtensions = ['register_generator'];
@@ -46,13 +51,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "rule",
           "name": "rule"
         },
-//        {
-//          "type": "grammar_type",
-//          "proto": "grammar",
-//          "generator": "grammar",
-//          "data": "grammar",
-//          "name": "grammar"
-//        },
+        //        {
+        //          "type": "grammar_type",
+        //          "proto": "grammar",
+        //          "generator": "grammar",
+        //          "data": "grammar",
+        //          "name": "grammar"
+        //        },
         {
           "type": "reference_type",
           "proto": "reference",
@@ -300,14 +305,14 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "char_class",
           "name": "char_class"
         },
-      ]
-    },
-    {},
-    {
-      "ref": "catInteger",
-      "proto": "integer_select",
-      "generator": "integer",
-      "blocks": [{
+        ]
+      },
+      {},
+      {
+        "ref": "catInteger",
+        "proto": "integer_select",
+        "generator": "integer",
+        "blocks": [{
           "type": "signed_integer_type",
           "proto": "single_integer_value",
           "shadow": "integerShadow",
@@ -397,14 +402,14 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "false",
           "name": "false"
         },
-      ]
-    },
-    {},
-    {
-      "ref": "catBinary",
-      "shadow": "binaryShadow",
-      "proto": "binary",
-      "blocks": [{
+        ]
+      },
+      {},
+      {
+        "ref": "catBinary",
+        "shadow": "binaryShadow",
+        "proto": "binary",
+        "blocks": [{
           "type": "byte_type",
           "proto": "binary_accept_all",
           "shadow": "byteShadow",
@@ -489,13 +494,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           "data": "attr",
           "name": "attr"
         },
-//        {
-//          "type": "lazy_type",
-//          "proto": "single_parser",
-//          "generator": "single_parser",
-//          "data": "lazy",
-//          "name": "lazy"
-//        },
+        //        {
+        //          "type": "lazy_type",
+        //          "proto": "single_parser",
+        //          "generator": "single_parser",
+        //          "data": "lazy",
+        //          "name": "lazy"
+        //        },
         {
           "type": "advance_type",
           "proto": "single_number_field",
@@ -656,7 +661,7 @@ var Config = (function(Config, mxcParsec, undefined) {
 
   var jbb = new JsonBlockBuilder(defaultExtensions, defaultMutators);
 
-  var createBlock = function(setup) {
+  var createBlock = function (setup) {
     jbb.create(setup);
     var proto = setup.proto;
     var parser = ['parser', 'reference'];
@@ -668,7 +673,8 @@ var Config = (function(Config, mxcParsec, undefined) {
           .addInput(0, {
             type: 'input_dummy'
           })
-          .setExtensions(['register_test_run_option', ]);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option'])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'single_parser':
@@ -714,7 +720,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'field_input',
             text: 'a'
           })
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'single_number_field':
@@ -725,7 +732,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'field_number',
             value: 0
           })
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'single_integer_value':
@@ -736,7 +744,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_value',
             check: ['integer_input', 'integer_all']
           })
-          .setExtensions(['register_test_run_option', ]);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'char_range':
@@ -750,7 +759,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             text: '9'
           })
           .addConnections(parser)
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'char_class':
@@ -773,7 +783,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             ]
           })
           .addConnections(parser)
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'binary_accept_all':
@@ -784,7 +795,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_value',
             check: [type + '_input', type + '_all']
           })
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'binary_input':
@@ -797,7 +809,7 @@ var Config = (function(Config, mxcParsec, undefined) {
           .setOutput(proto);
         break;
 
-        // note: code generators are different for the next both
+      // note: code generators are different for the next both
       case 'integer_digits_input':
       case 'integer_range_input':
         jbb
@@ -831,7 +843,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: "input_statement",
             check: "parser"
           }, '%%')
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'repeat_min_max':
@@ -853,7 +866,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             check: "parser"
           }, '%%')
           .inputsInline(true)
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'binary':
@@ -871,7 +885,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_value',
             check: ['binary_input', 'binary_all']
           }, '%%')
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'accept_all':
@@ -881,7 +896,8 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_value'
           })
           .inputsInline(true)
-          .setExtensions(['register_test_run_option']);
+          .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'grammar':
@@ -904,7 +920,8 @@ var Config = (function(Config, mxcParsec, undefined) {
               ['world', 'world']
             ]
           })
-          .setExtensions(['onchange_name_handler', 'register_test_run_option']);
+          .setExtensions(['onchange_nonterminal_name', 'register_test_run_option', 'register_togglebreakpoint_option', 'nonterminal_references'])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'rule':
@@ -920,14 +937,16 @@ var Config = (function(Config, mxcParsec, undefined) {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .setExtensions(['onchange_name_handler', 'register_test_run_option', 'register_refcreate_option']);
+          .setExtensions(['onchange_nonterminal_name', 'register_test_run_option', 'register_refcreate_option', 'register_togglebreakpoint_option', 'nonterminal_references'])
+          .setMutator('breakpoint_mutator');
         break;
 
       case 'reference':
         jbb
           .addConnections('reference')
-          .addInput(0, {type:'input_dummy'})
-          .setExtensions(['reference_dropdown', 'handleTopBlockDeletions', 'register_test_run_option' ]);
+          .addInput(0, { type: 'input_dummy' })
+          .setExtensions(['reference_dropdown', 'adjust_referenced_nonterminal_delete_mode', 'register_test_run_option', 'register_togglebreakpoint_option',])
+          .setMutator('breakpoint_mutator');
         break;
 
       default:
@@ -941,7 +960,7 @@ var Config = (function(Config, mxcParsec, undefined) {
     return jbb.get();
   }
 
-  var getBlocks = function() {
+  var getBlocks = function () {
     var json = [];
     var parserSet = document.getElementById('parserMenu').value;
 
@@ -976,7 +995,7 @@ var Config = (function(Config, mxcParsec, undefined) {
     return json;
   }
 
-  var setupMessages = function() {
+  var setupMessages = function () {
     // The toolbox XML specifies each category name using Blockly's messaging
     // format (eg. `<category name='%{BKY_CATLOGIC}'>`).
     // These message keys need to be defined in `Blockly.Msg` in order to
@@ -986,7 +1005,7 @@ var Config = (function(Config, mxcParsec, undefined) {
     // into `Blockly.Msg`.
     // TODO: Clean up the message files so this is done explicitly instead of
     // through this for-loop.
-    var addMessage = function(mkey, prefix, topic) {
+    var addMessage = function (mkey, prefix, topic) {
       key = mkey.substr(prefix.length);
       len = key.length - topic[0].length - topic[1];
       if (key.indexOf(topic[0]) === len) {
@@ -1026,7 +1045,7 @@ var Config = (function(Config, mxcParsec, undefined) {
     }
   }
 
-  var createSubs = function(config) {
+  var createSubs = function (config) {
     var xml = '';
     for (var v of config) {
       xml += '<' + v[0] + ' name="' + v[1] + '"><' + v[2] + ' type="' + v[3] + '"></' + v[2] + '></value>'
@@ -1034,7 +1053,7 @@ var Config = (function(Config, mxcParsec, undefined) {
     return xml;
   }
 
-  var getToolbox = function() {
+  var getToolbox = function () {
     var parserSet = document.getElementById('parserMenu').value;
 
     // generate the toolbox XML
@@ -1051,9 +1070,6 @@ var Config = (function(Config, mxcParsec, undefined) {
       var blocks = cat.blocks;
       for (var block of blocks) {
         var bType = block.type;
-        var colourKey = bType.substr(0, bType.length - 5).toUpperCase() + '_HUE';
-        Blockly.Msg[colourKey] = block.colour ? block.colour : colour;
-        toolbox += '<block type="' + bType + '">';
         var data = {
           data: block['data'] ? block['data'] : cat['data'] ? cat['data'] : '',
           generator: block['generator'] ? block['generator'] : cat['generator'] ? cat['generator'] : 'undone',
@@ -1062,6 +1078,13 @@ var Config = (function(Config, mxcParsec, undefined) {
           generatorsUndone.push(bType);
         }
         Extensions.linkParserToGenerator(bType, data);
+
+        
+        var colourKey = bType.substr(0, bType.length - 5).toUpperCase() + '_HUE';
+        Blockly.Msg[colourKey] = block.colour ? block.colour : colour;
+        if (bType == 'reference_type') continue;
+
+        toolbox += '<block type="' + bType + '">';
 
         var shadow = block['shadow'] ? block['shadow'] : cat['shadow'] ? cat['shadow'] : 'none';
         if (shadow !== 'none') {

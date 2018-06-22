@@ -8,11 +8,45 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
   var response = undefined;
   var cStepIdx = undefined;
   var references = [];
-  var breakpoints = {};
   var highlights = [];
 
   var setupResponse = function(res) {
     response = res;
+  }
+
+  var adjustHighlights = function(cStep) {
+    var pStep = highlights.pop();
+    if (pStep) {
+      // remove highlighting of previous step
+      var prevBlock = app.workspace.getBlockById(pStep.block);
+      if (!cStep || prevBlock.type != 'reference_type' || app.workspace.getBlockById(cStep.block).type != 'rule_type') {
+        app.workspace.highlightBlock(pStep.block, false);
+      }
+      if (prevBlock.type == 'reference_type') {
+          references.push(pStep.block);
+      }
+      // textHighlight.remove(pStep.from);
+      textHighlight.remove();
+    }
+    
+    if (cStepIdx == response.result.actions.length) return true;
+
+    textHighlight.set(cStep);
+    //highlight blocks
+    app.workspace.highlightBlock(cStep.block, true);
+
+    // output
+    if (cStep.output && cStep.output.length != 0) {
+      outputText.value += cStep.output;
+      if (cStep.action == 'accept') {
+        outputText.value += ', attribute: ' + cStep.attribute;
+      }
+      outputText.value += '\n';
+    }
+    highlights.push(cStep);    
+    cStepIdx++;
+    outputText.scrollTop = outputText.scrollHeight;
+    return false;
   }
 
   var nextBreakpoint = function() {
@@ -22,46 +56,11 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
 
     while (cStepIdx < last) {
       var cStep = response.result.actions[cStepIdx++];
-      if (breakpoints[cStep.block]) {
+      if (app.workspace.getBlockById(cStep.block).breakpoint) {
         break;
       }
     }
-    
-    var pStep = highlights.pop();
-    if (pStep) {
-      // remove highlighting of previous step
-      var prevBlock = app.workspace.getBlockById(pStep.block);
-      if (!cStep || prevBlock.type != 'reference_type' || app.workspace.getBlockById(cStep.block).type != 'rule_type') {
-        app.workspace.highlightBlock(pStep.block, false);
-      }
-      if (prevBlock.type == 'reference_type') {
-          references.push(pStep.block);
-      }
-      // textHighlight.remove(pStep.from);
-      textHighlight.remove();
-    }
-    
-    if (cStepIdx == last) return true;
-
-    textHighlight.set(cStep);
-    //highlight blocks
-    app.workspace.highlightBlock(cStep.block, true);
-
-    //highlight text
-    textHighlight.set(cStep.from, cStep.to, cStep.action);
-
-    // output
-    if (cStep.output && cStep.output.length != 0) {
-      outputText.value += cStep.output;
-      if (cStep.action == 'accept') {
-        outputText.value += ', attribute: ' + cStep.attribute;
-      }
-      outputText.value += '\n';
-    }
-    highlights.push(cStep);    
-    cStepIdx++;
-    outputText.scrollTop = outputText.scrollHeight;
-    return false;
+    return adjustHighlights(cStep);
   }
 
   var nextStep = function () {
@@ -69,42 +68,8 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     
     var last = response.result.actions.length;
     var cStep = cStepIdx <  last ? response.result.actions[cStepIdx] : null;
-    var pStep = highlights.pop();
 
-    if (pStep) {
-      // remove highlighting of previous step
-      var prevBlock = app.workspace.getBlockById(pStep.block);
-      if (!cStep || prevBlock.type != 'reference_type' || app.workspace.getBlockById(cStep.block).type != 'rule_type') {
-        app.workspace.highlightBlock(pStep.block, false);
-      }
-      if (prevBlock.type == 'reference_type') {
-          references.push(pStep.block);
-      }
-      // textHighlight.remove(pStep.from);
-      textHighlight.remove();
-    }
-
-    if (cStepIdx == last) return true;
-
-    textHighlight.set(cStep);
-    //highlight blocks
-    app.workspace.highlightBlock(cStep.block, true);
-
-    //highlight text
-    textHighlight.set(cStep.from, cStep.to, cStep.action);
-
-    // output
-    if (cStep.output && cStep.output.length != 0) {
-      outputText.value += cStep.output;
-      if (cStep.action == 'accept') {
-        outputText.value += ', attribute: ' + cStep.attribute;
-      }
-      outputText.value += '\n';
-    }
-    highlights.push(cStep);    
-    cStepIdx++;
-    outputText.scrollTop = outputText.scrollHeight;
-    return false;
+    return adjustHighlights(cStep);
   }
 
   player.prepareCode = function (code) {
@@ -181,7 +146,7 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
   };
 
   var runToBreakpoint = function() {
-    outputText.value = 'Parser Debugger started.\n';
+    outputText.value = 'Parser Debugger started.\n\n';
     outputText.scrollTop = outputText.scrollHeight;
     if (nextBreakpoint()) {
       displayParserResult();
@@ -195,6 +160,7 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     animation = window.setInterval(
       function() {
         if (nextStep()) {
+          displayParserResult();
           player.stop(); 
         }
       }, interval)
@@ -207,12 +173,10 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
 
   player.setBreakpoint = function(block, value) {
     if (value == true) {
-      console.log('Setting breakpoint.' + block.id);
       block.breakpoint = true;
       block.stdColour = block.getColour();
       block.setColour(0);
     } else {
-      console.log('Clearing breakpoint.'+ block.id);
       block.breakpoint = false;
       block.setColour(block.stdColor);
     }
@@ -236,11 +200,6 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     }
     outputText.scrollTop = outputText.scrollHeight;
   };
-
-  var displayBreakpoint = function () {
-    outputText.value += cStepIdx + '\n';
-    return;
-  }
 
   player.debug = function(block = null) {
     switch (state) {
