@@ -52,8 +52,12 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
         var id = html.getAttribute('id');
 
         if (type == 'reference_type') {
-          let rid = html.children[1].innerHTML;
-          app.workspace.getBlockById(rid).removeReference(id);
+          let x = html.children[1];
+          if (!x) continue;
+          x = x.innerHTML;
+          if (!x) continue;
+          x = app.workspace.getBlockById(x);
+          if (x) x.removeReference(id);
           continue;
         } 
         // It does not hurt if id is of a nonterminal block here.
@@ -63,7 +67,6 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
     }
   }
 
-
   var extensions = {
     'register_test_run_option': function () {
       var that = this;
@@ -71,7 +74,7 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
       that.customContextMenuOptions.unshift(
         {
           enabled: true,
-          text: 'Test parser',
+          text: 'Test Parser',
           callback: function () {
             player.playPause(that);
           }
@@ -79,7 +82,7 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
       that.customContextMenuOptions.unshift(
         {
           enabled: true,
-          text: 'Run parser',
+          text: 'Run Parser',
           callback: function () {
             player.run(that);
           }
@@ -92,7 +95,7 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
       that.customContextMenuOptions.unshift(
         {
           enabled: true,
-          text: 'Toggle breakpoint',
+          text: 'Toggle Breakpoint',
           callback: function () {
             player.toggleBreakpoint(that);
           }
@@ -106,7 +109,7 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
       that.customContextMenuOptions.unshift(
         {
           enabled: true,
-          text: 'Create reference',
+          text: 'Create Reference',
           callback: function () {
             var block = app.workspace.newBlock('reference_type');
             name = that.getFieldValue('PARAM1');
@@ -168,9 +171,12 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
     'reference_dropdown': function () {
       
       var dropdown = new Blockly.FieldDropdown(function () {
+        if (nonTerminalIds.size == 0) {
+          return ['dummy', 'dummy'];
+        }
         var options = [];
         for (var option of nonTerminalIds) {
-          options.push([option[1], option[0]]);
+          if (option) options.push([option[1], option[0]]);
         }
         return options;
       });
@@ -187,16 +193,20 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
         switch (event.type) {
           case Blockly.Events.CREATE:
             var nonTerminal = app.workspace.getBlockById(id);
-            nonTerminal.addReference(that.id);
-            // next two lines provide a workaround for the dropdown displaying wrongly
-            // the field value (a block id) instead of the nonterminal name
-            // on page reload            
-            that.getField('PARAM1').setText(nonTerminal.getFieldValue('PARAM1'));
-            that.setFieldValue(id, 'PARAM1');
+            if (nonTerminal) {
+              nonTerminal.addReference(that.id);
+              // next two lines provide a workaround for the dropdown displaying wrongly
+              // the field value (a block id) instead of the nonterminal name
+              // on page reload            
+              that.getField('PARAM1').setText(nonTerminal.getFieldValue('PARAM1'));
+              that.setFieldValue(id, 'PARAM1');
+            }
             break;
           case Blockly.Events.CHANGE:
-            app.workspace.getBlockById(event.oldValue).removeReference(that.id);
-            app.workspace.getBlockById(event.newValue).addReference(that.id);
+            var rule = app.workspace.getBlockById(event.oldValue);
+            if (rule) rule.removeReference(that.id);
+            rule = app.workspace.getBlockById(event.newValue);
+            if (rule) rule.addReference(that.id);
             break;
         }
       });

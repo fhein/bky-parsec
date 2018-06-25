@@ -15,15 +15,32 @@ var mxcParsec = (function (app, rpc, undefined) {
   var inputText;
   var outputText;
 
-  var customContextMenuFn = function (options) {
-    var option = {
-      enabled: true,
-      text: "Custom option",
-      callback: function () {
-        console.log('Custom context menu option called');
+  /**
+   * Modify Blockly's Delete All callback to enable deletion of
+   * undeletable blocks also.
+   * 
+   * Also removes the 'Inline Inputs' Entry
+   */
+  var adjustGlobalContextMenu = function (options) {
+    var blocks = app.workspace.getAllBlocks();
+    var count = blocks.length;
+    var text = count <= 1 ? 'Delete Block' : 'Delete ' + count + ' Blocks'; 
+    var inlineIdx = -1;
+    var idx = 0;
+    for (var option of options) {
+      if (option.text.indexOf('Delete') != -1) {
+        option.text = text,
+        option.callback = function () {
+          discard(true);
+        }
+      } else if (option.text.indexOf('Inline') != -1) {
+        inlineIdx = idx;
       }
-    };
-    options.push(option);
+      idx++;
+    }
+    if (inlineIdx != -1) {
+      options = options.splice(inlineIdx, 1);
+    }
   };
 
   /**
@@ -41,10 +58,10 @@ var mxcParsec = (function (app, rpc, undefined) {
   /**
    * Discard all blocks from the workspace.
    */
-  var discard = function () {
+  var discard = function (noConfirm = false) {
     var blocks = app.workspace.getAllBlocks();
     var count = blocks.length;
-    if (count < 2 || window.confirm(MSG['deleteAllBlocks'].replace('%1', count))) {
+    if (count < 2 || noConfirm || window.confirm(MSG['deleteAllBlocks'].replace('%1', count))) {
       for (var block of blocks) {
         block.setDeletable(true);
       }
@@ -297,7 +314,6 @@ var mxcParsec = (function (app, rpc, undefined) {
     var content = document.getElementById('content_' + selected);
     if (checkAllGeneratorFunctionsDefined(generator)) {
       var args = Player.prepareCode(Blockly.PHP.workspaceToCode(app.workspace));
-      
       content.innerHTML = args ? JSON.stringify(JSON.parse(args.parser), null, 2) : '';
     }
   };
@@ -407,7 +423,7 @@ var mxcParsec = (function (app, rpc, undefined) {
     }
     outputText.innerHTML = '';
 
-    app.workspace.configureContextMenu = customContextMenuFn;
+    app.workspace.configureContextMenu = adjustGlobalContextMenu;
     app.workspace.addChangeListener(Extensions.onDeleteNonterminalOrReference);
 
     // Register only the extensions actually used by blocks

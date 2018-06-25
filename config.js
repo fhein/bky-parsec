@@ -36,6 +36,9 @@ var Config = (function (Config, mxcParsec, undefined) {
       ['value', 'PARAM1', 'shadow', 'integer_input_type'],
       ['value', 'PARAM1', 'block', 'integer_all_type']
     ],
+    'ruleShadow': [
+      ['value', 'PARAM3', 'shadow', 'space_type'],
+    ],
   }
 
   var categories = {
@@ -47,6 +50,7 @@ var Config = (function (Config, mxcParsec, undefined) {
         "blocks": [{
           "type": "rule_type",
           "proto": "rule",
+          "shadow": "ruleShadow",
           "generator": "rule",
           "data": "rule",
           "name": "rule"
@@ -305,7 +309,14 @@ var Config = (function (Config, mxcParsec, undefined) {
           "data": "char_class",
           "name": "char_class"
         },
-        ]
+        {
+          "type": "space_type",
+          "proto": "no_arguments",
+          "generator": "space",
+          "data": "char_class",
+          "name": "space"
+        },
+]
       },
       {},
       {
@@ -519,6 +530,7 @@ var Config = (function (Config, mxcParsec, undefined) {
         "type": "rule_type",
         "proto": "rule",
         "generator": "rule",
+        "shadow": "ruleShadow",
         "data": "rule",
         "name": "rule"
       },
@@ -930,6 +942,13 @@ var Config = (function (Config, mxcParsec, undefined) {
             type: 'field_input',
             text: 'rule1'
           })
+          .addInput(1, {
+            type: 'input_dummy'
+          })
+          .addInput(1, {
+            type: 'input_statement',
+            check: parser
+          }, '%%')
           .addInput(1, {
             type: 'input_dummy'
           })

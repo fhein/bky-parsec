@@ -26,7 +26,7 @@ var MSG = {
 
 
     //----------------------------------------------------
-    // parsec category colours
+    // parsec category texts
     catAuxiliary: "Hilfsparser",
     catBinary: "Binäre Parser",
     catString: "Zeichenketten & Schlüsselwörter",
@@ -40,17 +40,19 @@ var MSG = {
     catLoops: "Schleifen und Sequenzen",
     //----------------------------------------------------
     // parsec category colours
-    catRuleHue: "350",
+    catRuleHue: "240",
     catDirectiveHue: "225",
     catLoopsHue: "215",
     catLogicHue: "205",
     catSkipperHue: "195",
     catStringHue: "170",
     catCharHue: "160",
+    catBooleanHue: "145",
     catIntegerHue: "135",
     catCastHue: "125",
     catBinaryHue: "60",
     catAuxiliaryHue: "45",
+
 
     //----------------------------------------------------
     // parsec block help urls
@@ -167,7 +169,7 @@ var MSG = {
     blockAdvanceMsg1: "Erhöhe die Position des Iterators um",
     blockAlternativeMsg1: "erste erfolgreiche Alternative von ...",
     blockAndMsg1: "teste Erfolg von",
-    blockAsStringMsg1: "als Zeichenkettte",
+    blockAsStringMsg1: "als Zeichenkette",
     blockAttrMsg1: "direktes Attribut",
     blockBinDoubleMsg1: "binärer double-Wert",
     blockBinFloatMsg1: "binärer float-Wert",
@@ -208,6 +210,7 @@ var MSG = {
     blockRepeatMsg1: "wiederhole",
     blockRepeatMsg2: "Mal",
     blockRuleMsg1: "Regel",
+    blockRuleMsg4: "Skipper",
     blockReferenceMsg1: "Referenz",
     blockSequenceMsg1: "Sequenz von",
     blockSequentialOrMsg1: "sequentielles Oder",
@@ -243,7 +246,7 @@ var MSG = {
     blockIntegerAllMsg1:"alle",
     blockBinaryAllMsg1:"alle",
     blockNegateMsg1:"irgendein Zeichen außer ...",
-
+    blockSpaceMsg1:"whitespace",
     // drop down selections for char_class
     //
     dropdownAlnumOption: "Buchstabe oder Ziffer",

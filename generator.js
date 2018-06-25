@@ -17,7 +17,9 @@ Generator.generators = {
     'no_argument': function(block) {
       return '["' + this.data + '", []],\n';
     },
-
+    'space': function(block) {
+      return '["' + block.data + '", ["' + block.id + '", "space"]],\n';
+    },
     'single_text_field': function(block) {
       var value = block.getFieldValue('PARAM1');
       var code = '["' + block.data + '", ["' + block.id + '", "' + value + '"]],\n';
@@ -131,12 +133,14 @@ Generator.generators = {
     'rule': function(block) {
       var name = block.getFieldValue('PARAM1');
       var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
+      var skipper = Blockly.PHP.statementToCode(block, 'PARAM3');
       return '"'+name+'":["' + block.data + '", [\n' + Blockly.PHP.INDENT + '"' + block.id + '", "' + name +
-        '",\n' + subject + ']],\n';
+        '",\n' + subject + skipper + ']],\n';
     },
     'grammar': function(block) {
       var name = block.getFieldValue('PARAM1');
       var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
+
       var start = block.getFieldValue('PARAM3');
       return '"'+ name + '":["' + block.data + '", [\n' + Blockly.PHP.INDENT + '"' + block.id + '", "' + name + '",\n'
       + '[' + subject + '], ' + Blockly.PHP.INDENT + '"' + start + '",\n' + ']],\n';
