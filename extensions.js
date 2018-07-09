@@ -10,7 +10,6 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
     return nonTerminalTypes.indexOf(type) >= 0;
   }
 
-
   var addChangeHandler = function (block, handler) {
     if (!block.changeStack) {
       block.changeStack = [];
@@ -183,6 +182,22 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
       this.inputList[0].appendField(dropdown, 'PARAM1');
     },
     
+    'dropbox_value_workaround' : function() {
+      let that = this;
+      addChangeHandler(this, function (event) {
+        if (!(event.type == Blockly.Events.CREATE)) return;
+        var id = that.getFieldValue('PARAM1');
+        var nonTerminal = app.workspace.getBlockById(id);
+        if (nonTerminal) {
+          // next two lines provide a workaround for the dropdown displaying wrongly
+          // the field value (a block id) instead of the nonterminal name
+          // on page reload     
+          that.getField('PARAM1').setText(nonTerminal.getFieldValue('PARAM1'));
+          that.setFieldValue(id, 'PARAM1');
+        }
+      });
+    },
+
     // This extension makes sure that referenced grammars/rules can't be deleted
     // applicable only on reference_type blocks
     'adjust_referenced_nonterminal_delete_mode': function () {
@@ -193,20 +208,18 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
         switch (event.type) {
           case Blockly.Events.CREATE:
             var nonTerminal = app.workspace.getBlockById(id);
-            if (nonTerminal) {
-              nonTerminal.addReference(that.id);
-              // next two lines provide a workaround for the dropdown displaying wrongly
-              // the field value (a block id) instead of the nonterminal name
-              // on page reload            
-              that.getField('PARAM1').setText(nonTerminal.getFieldValue('PARAM1'));
-              that.setFieldValue(id, 'PARAM1');
-            }
+            if (nonTerminal) nonTerminal.addReference(that.id);
             break;
+
           case Blockly.Events.CHANGE:
-            var rule = app.workspace.getBlockById(event.oldValue);
-            if (rule) rule.removeReference(that.id);
-            rule = app.workspace.getBlockById(event.newValue);
-            if (rule) rule.addReference(that.id);
+            if (event.oldValue) {
+              var rule = app.workspace.getBlockById(event.oldValue);
+              if (rule) rule.removeReference(that.id);
+            }
+            if (event.newValue) {
+              rule = app.workspace.getBlockById(event.newValue);
+              if (rule) rule.addReference(that.id);
+            }
             break;
         }
       });

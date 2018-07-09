@@ -65,7 +65,7 @@ var Config = (function (Config, mxcParsec, undefined) {
         {
           "type": "reference_type",
           "proto": "reference",
-          "generator": "single_text_field",
+          "generator": "reference",
           "data": "reference",
           "name": "reference"
         }
@@ -964,7 +964,7 @@ var Config = (function (Config, mxcParsec, undefined) {
         jbb
           .addConnections('reference')
           .addInput(0, { type: 'input_dummy' })
-          .setExtensions(['reference_dropdown', 'adjust_referenced_nonterminal_delete_mode', 'register_test_run_option', 'register_togglebreakpoint_option',])
+          .setExtensions(['reference_dropdown', 'adjust_referenced_nonterminal_delete_mode', 'dropbox_value_workaround', 'register_test_run_option', 'register_togglebreakpoint_option',])
           .setMutator('breakpoint_mutator');
         break;
 

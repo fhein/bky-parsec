@@ -134,12 +134,12 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     args.input = inputText.innerHTML;
     var sel = window.getSelection();
     var range = sel.rangeCount ? sel.getRangeAt(0) : null;
-    if (range) {
+    args.selectionStart = 0;
+    args.selectionEnd = inputText.innerText.length;
+    // apply user's selection only if length > 0
+    if (range && (range.startOffset != range.endOffset)) {
       args.selectionStart = range.startOffset;
-      args.selectionEnd = range.endOffset > range.startOffset ? range.endOffset : inputText.innerText.length;
-    } else {
-      args.selectionStart = 0;
-      args.selectionEnd = inputText.innerText.length;
+      args.selectionEnd = range.endOffset;
     }
     sel.removeAllRanges();
     return args;
