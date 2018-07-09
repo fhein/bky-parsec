@@ -115,15 +115,15 @@ Generator.generators = {
           break;
       }
       var subject = Blockly.PHP.statementToCode(block, 'PARAM3');
-      var code = '["' + block.data + '", [' + subject + Blockly.PHP.INDENT + min;
-      return '["' + block.data + '", ["' + block.id + '", '+ subject + Blockly.PHP.INDENT + min + ', ' + max + ']],';
+      var code = '["' + block.data + '", [' + subject + min;
+      return '["' + block.data + '", ["' + block.id + '", '+ subject + min + ', ' + max + ']],';
     },
 
     'repeat_min_max': function(block) {
       var min = block.getFieldValue('PARAM1');
       var max = block.getFieldValue('PARAM2');
       var subject = Blockly.PHP.statementToCode(block, 'PARAM3');
-      return '["' + block.data + '", ["' + block.id + '", '+ subject + Blockly.PHP.INDENT + min + ', ' + max + ']],';
+      return '["' + block.data + '", ["' + block.id + '", '+ subject + min + ', ' + max + ']],';
     },
 
     'integer': function(block) {
@@ -136,7 +136,7 @@ Generator.generators = {
       var name = block.getFieldValue('PARAM1');
       var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
       var skipper = Blockly.PHP.statementToCode(block, 'PARAM3');
-      return '"'+name+'":["' + block.data + '", [' + Blockly.PHP.INDENT + '"' + block.id + '", "' + name +
+      return '"'+name+'":["' + block.data + '", [' + '"' + block.id + '", "' + name +
         '",' + subject + skipper + ']],';
     },
     
@@ -145,8 +145,8 @@ Generator.generators = {
       var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
 
       var start = block.getFieldValue('PARAM3');
-      return '"'+ name + '":["' + block.data + '", [' + Blockly.PHP.INDENT + '"' + block.id + '", "' + name + '",'
-      + '[' + subject + '], ' + Blockly.PHP.INDENT + '"' + start + '",' + ']],';
+      return '"'+ name + '":["' + block.data + '", [' + '"' + block.id + '", "' + name + '",'
+      + '[' + subject + '], ' + '"' + start + '",' + ']],';
     },
 
     'reference': function(block) {
