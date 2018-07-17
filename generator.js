@@ -98,6 +98,12 @@ Generator.generators = {
       var field_value = block.getFieldValue('PARAM1');
       return [field_value, Blockly.PHP.ORDER_NONE];
     },
+    
+    'attr': function(block) {
+      var type = block.getFieldValue('PARAM1');
+      var value = block.getFieldValue('PARAM2');
+      return '["' + block.data + '", ["' + block.id + '", "'+ type + '", "' + value + '"]],';
+    },
 
     'repeat': function(block) {
       var mode = block.getFieldValue('PARAM1');

@@ -185,6 +185,7 @@
     blockAndMsg1: "test success of",
     blockAsStringMsg1: "as string",
     blockAttrMsg1: "direct attribute",
+    blockAttrMsg3: "value:",
     blockBinDoubleMsg1: "binary double",
     blockBinFloatMsg1: "binary float",
     blockBinMsg1: "binary number",

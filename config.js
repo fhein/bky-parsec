@@ -189,14 +189,12 @@ var Config = (function (Config, mxcParsec, undefined) {
           "generator": "array_parser",
           "data": "permutation",
           "name": "permutation",
-          "generator": "single_parser_multiple",
         },
         {
           "type": "sequential_or_type",
           "generator": "array_parser",
           "data": "sequential_or",
           "name": "sequential_or",
-          "generator": "single_parser_multiple",
         },
         {
           "type": "not_type",
@@ -503,8 +501,8 @@ var Config = (function (Config, mxcParsec, undefined) {
         },
         {
           "type": "attr_type",
-          "proto": "accept_all",
-          "generator": "undone_statement",
+          "proto": "attr",
+          "generator": "attr",
           "data": "attr",
           "name": "attr"
         },
@@ -904,13 +902,26 @@ var Config = (function (Config, mxcParsec, undefined) {
           .setMutator('breakpoint_mutator');
         break;
 
-      case 'accept_all':
+      case 'attr':
         jbb
           .addConnections(parser)
           .addInput(0, {
-            type: 'input_value'
+            type: 'input_dummy'
           })
-          .inputsInline(true)
+          .addInput(1, {
+            type: 'field_dropdown',
+            options: [
+              ['type: integer', 'integer'],
+              ['type: float', 'float'],
+              ['type: bool', 'boolean'],
+              ['type: string', 'string']
+            ]
+          }, '%%')
+          .addInput(2, {
+            type: 'field_input',
+            text: '0',
+          },'%message% %%')
+          //.inputsInline(true)
           .setExtensions(['register_test_run_option', 'register_togglebreakpoint_option',])
           .setMutator('breakpoint_mutator');
         break;
