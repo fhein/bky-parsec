@@ -18,11 +18,13 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     var pStep = highlights.pop();
     if (pStep) {
       // remove highlighting of previous step
-      var prevBlock = app.workspace.getBlockById(pStep.block);
-      if (!cStep || prevBlock.type != 'reference_type' || app.workspace.getBlockById(cStep.block).type != 'rule_type') {
+      var prevBlock = pStep.block != 'auto_sequence' ? app.workspace.getBlockById(pStep.block) : null;
+      var curBlock = cStep && cStep.block != 'auto_sequence' ? app.workspace.getBlockById(cStep.block) : null;
+      
+      if (!cStep || (prevBlock && prevBlock.type != 'reference_type') || (curBlock && curBlock.type != 'rule_type')) {
         app.workspace.highlightBlock(pStep.block, false);
       }
-      if (prevBlock.type == 'reference_type') {
+      if (prevBlock && prevBlock.type == 'reference_type') {
           references.push(pStep.block);
       }
       // textHighlight.remove(pStep.from);
@@ -33,7 +35,8 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
 
     textHighlight.set(cStep);
     //highlight blocks
-    app.workspace.highlightBlock(cStep.block, true);
+    if (cStep.block != 'auto_sequence')
+      app.workspace.highlightBlock(cStep.block, true);
 
     // output
     if (cStep.output && cStep.output.length != 0) {
@@ -56,7 +59,7 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
 
     while (cStepIdx < last) {
       var cStep = response.result.actions[cStepIdx++];
-      if (app.workspace.getBlockById(cStep.block).breakpoint) {
+      if (cStep.block !== 'auto_sequence' && app.workspace.getBlockById(cStep.block).breakpoint) {
         break;
       }
     }

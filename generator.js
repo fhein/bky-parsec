@@ -1,5 +1,12 @@
 var Generator = {};
 
+Generator.createSingleParser = function(block, param) {
+  var statements = Blockly.PHP.statementToCode(block, param);
+  var child = block.getInputTargetBlock(param);
+  var hasSequence = (child && child.getNextBlock() != null);
+  return hasSequence ? '["sequence",["auto_sequence",['+statements+']]],' : statements;
+}
+
 Generator.generators = {
   php: {
     'undone': function(block) {
@@ -36,16 +43,11 @@ Generator.generators = {
     },
 
     'single_parser': function(block) {
-      // @todo: sequencer einbauen
-      var statements_param = Blockly.PHP.statementToCode(block, 'PARAM1');
-      return '["' + block.data + '", ["' + block.id + '", '+ statements_param + ']],';
+      return '["' + block.data + '", ["' + block.id + '", '+ Generator.createSingleParser(block, 'PARAM1') + ']],';
     },
 
     'dual_parser': function(block) {
-      // @todo: sequencer einbauen
-      var statements1 = Blockly.PHP.statementToCode(block, 'PARAM1');
-      var statements2 = Blockly.PHP.statementToCode(block, 'PARAM2');
-      return '["' + block.data + '", ["' + block.id + '", '+ statements1 + statements2 + ']],';
+      return '["' + block.data + '", ["' + block.id + '", '+ Generator.createSingleParser(block, 'PARAM1') + Generator.createSingleParser(block, 'PARAM2') + ']],';
     },
 
     'array_parser': function(block) {

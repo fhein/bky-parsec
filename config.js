@@ -174,7 +174,8 @@ var Config = (function (Config, mxcParsec, undefined) {
         "blocks": [{
           "type": "alternative_type",
           "data": "alternative",
-          "name": "alternative"
+          "name": "alternative",
+          "generator": "single_parser_multiple",
         },
         {
           "type": "difference_type",
@@ -187,13 +188,15 @@ var Config = (function (Config, mxcParsec, undefined) {
           "type": "permutation_type",
           "generator": "array_parser",
           "data": "permutation",
-          "name": "permutation"
+          "name": "permutation",
+          "generator": "single_parser_multiple",
         },
         {
           "type": "sequential_or_type",
           "generator": "array_parser",
           "data": "sequential_or",
-          "name": "sequential_or"
+          "name": "sequential_or",
+          "generator": "single_parser_multiple",
         },
         {
           "type": "not_type",
