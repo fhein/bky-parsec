@@ -142,16 +142,15 @@ Generator.generators = {
 
     'rule': function(block) {
       var name = block.getFieldValue('PARAM1');
-      var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
-      var skipper = Blockly.PHP.statementToCode(block, 'PARAM3');
-      return '"'+name+'":["' + block.data + '", [' + '"' + block.id + '", "' + name +
-        '",' + subject + skipper + ']],';
+      var attrType = block.getFieldValue('PARAM2');
+      attrType = attrType === 'default' ? '' : '"'+attrType+'"';
+      return '"'+ name +'":["' + block.data + '", [' + '"' + block.id + '", "' + name +
+        '",' + Generator.createSingleParser(block, 'PARAM3') + Generator.createSingleParser(block, 'PARAM4') + attrType + ']],';
     },
     
     'grammar': function(block) {
       var name = block.getFieldValue('PARAM1');
       var subject = Blockly.PHP.statementToCode(block, 'PARAM2');
-
       var start = block.getFieldValue('PARAM3');
       return '"'+ name + '":["' + block.data + '", [' + '"' + block.id + '", "' + name + '",'
       + '[' + subject + '], ' + '"' + start + '",' + ']],';

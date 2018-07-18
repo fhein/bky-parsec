@@ -112,6 +112,7 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
           callback: function () {
             var block = app.workspace.newBlock('reference_type');
             name = that.getFieldValue('PARAM1');
+            console.log(name);
             let id = ([...nonTerminalIds].find(([, v]) => v === name) || [])[0];
             block.setFieldValue(id, 'PARAM1');
             var posXY = that.getRelativeToSurfaceXY();
@@ -123,7 +124,7 @@ var Extensions = (function (Extensions, player, config, app, undefined) {
         });
     },
 
-    // This extension adds reference handling to blocks
+    // This extension adds reference handling to blocks,
     // applicable on nonterminal blocks only
     'nonterminal_references': function() {
       var that = this;

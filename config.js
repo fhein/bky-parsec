@@ -37,7 +37,7 @@ var Config = (function (Config, mxcParsec, undefined) {
       ['value', 'PARAM1', 'block', 'integer_all_type']
     ],
     'ruleShadow': [
-      ['value', 'PARAM3', 'shadow', 'space_type'],
+      ['value', 'PARAM4', 'shadow', 'space_type'],
     ],
   }
 
@@ -113,6 +113,11 @@ var Config = (function (Config, mxcParsec, undefined) {
           "generator": "single_parser",
           "data": "as_string",
           "name": "as_string"
+        },{
+          "type": "as_int_type",
+          "generator": "single_parser",
+          "data": "as_int",
+          "name": "as_int"
         },]
       },
       {},
@@ -957,16 +962,26 @@ var Config = (function (Config, mxcParsec, undefined) {
             text: 'rule1'
           })
           .addInput(1, {
+            type: 'field_dropdown',
+            options: [
+              ['type default', 'default'],
+              ['type integer', 'integer'],
+              ['type float', 'float'],
+              ['type bool', 'boolean'],
+              ['type string', 'string']
+            ]
+          }, '%%')
+          .addInput(2, {
             type: 'input_dummy'
           })
-          .addInput(1, {
+          .addInput(2, {
             type: 'input_statement',
             check: parser
           }, '%%')
-          .addInput(1, {
+          .addInput(3, {
             type: 'input_dummy'
           })
-          .addInput(1, {
+          .addInput(3, {
             type: 'input_statement',
             check: parser
           }, '%%')
