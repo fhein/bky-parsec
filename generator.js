@@ -144,7 +144,7 @@ Generator.generators = {
       var name = block.getFieldValue('PARAM1');
       var attrType = block.getFieldValue('PARAM2');
       attrType = attrType === 'default' ? '' : '"'+attrType+'"';
-      return '"'+ name +'":["' + block.data + '", [' + '"' + block.id + '", "' + name +
+      return /*'"'+ name +'":*/'["' + block.data + '", [' + '"' + block.id + '", "' + name +
         '",' + Generator.createSingleParser(block, 'PARAM3') + Generator.createSingleParser(block, 'PARAM4') + attrType + ']],';
     },
     
@@ -157,10 +157,10 @@ Generator.generators = {
     },
 
     'reference': function(block) {
-      var value = block.getFieldValue('PARAM1');
-      var rule =  block.workspace.getBlockById(value);
-      value = rule.getFieldValue('PARAM1');
-      var code = '["' + block.data + '", ["' + block.id + '", "' + value + '"]],';
+      var name = block.getFieldValue('PARAM1');
+      var rule =  block.workspace.getBlockById(name);
+      name = rule.getFieldValue('PARAM1');
+      var code = '["' + block.data + '", ["' + block.id + '", "' + name + '", "' + rule.id + '"]],';
       return code;
     },
   },

@@ -75,24 +75,6 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     return adjustHighlights(cStep);
   }
 
-  player.prepareCode = function (code) {
-    if (code.length == 0) {
-      return;
-    }
-    var start;
-    if (code[0] == '[') {
-      start = 'parser';
-      code = '"' + start + '":' + code;
-    } else {
-      start = code.substr(1, code.indexOf(':') - 2);
-    }
-    code = '{' + code + '}';
-    return {
-      "start": start,
-      "parser": code.replace(/\,(?=\s*?[\}\]])/g, '')
-    };
-  };
-
   player.stop = function () {
     if (state == 'idle') return;
     if (animation) {
@@ -118,21 +100,33 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     console.log(state);
   };
 
-  var getArgs = function (block) {
-    var code = block ? Blockly.PHP.blockToCode(block) : code = Blockly.PHP.workspaceToCode(app.workspace);
-
-    if (block) {
-      // blockToCode returns the code of the current block AND ALL blocks connected downstream
-      // This is a nasty hack to get rid of the downstream block's code
-      if (code[0] !== '"') {
-        code = '[' + code + ']';
-        code = code.replace(/\,(?=\s*?[\}\]])/g, '');
-        code = JSON.parse(code);
-        code = JSON.stringify(code[0]);
-      }
+  player.prepareCode = function(code, block = null) {
+    if (code.length == 0) {
+      return;
     }
+    code = '[' + code + ']';
+    code = code.replace(/\,(?=\s*?[\}\]])/g, '');
+    let start;
+    if (!block) {
+      // if no start block is given take the first block
+      // defined in code
+      let objects = JSON.parse(code);
+      // objects[0] -> first block in code
+      // objects[0][1] -> parameter array of first block
+      // objects[0][1][0] -> first parameter (block id)
+      start = objects[0][1][0];
+    } else {
+      start = block.id;
+    }
+    return {
+      start: start,
+      parser: code
+    };
+  };
 
-    var args = player.prepareCode(code);
+  var getArgs = function (block) {
+    var code = Blockly.PHP.workspaceToCode(app.workspace);
+    var args = player.prepareCode(code, block);
     args.parser = JSON.parse(args.parser);
     args.input = inputText.innerHTML;
     var sel = window.getSelection();
