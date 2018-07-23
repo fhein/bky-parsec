@@ -95,7 +95,7 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     references = [];
     cStepIdx = undefined;
     state = 'idle';
-    document.getElementById('playPauseIcon').classList.toggle("fa-fast-forward");
+    document.getElementById('playPauseIcon').classList.toggle("fa-play");
     document.getElementById('playPauseButton').title = MSG['playTooltip'];
     console.log(state);
   };
@@ -280,7 +280,7 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     if (state != 'running') return;
     window.clearInterval(animation);
     state = 'paused';
-    document.getElementById('playPauseIcon').classList.toggle("fa-fast-forward");
+    document.getElementById('playPauseIcon').classList.toggle("fa-play");
     document.getElementById('playPauseButton').title = MSG['resumeTooltip'];
     console.log(state);
   };
@@ -296,6 +296,7 @@ var Player = (function (player, rpc, textHighlight, app, undefined) {
     );
     state = 'running';
     document.getElementById('playPauseIcon').classList.toggle("fa-pause")
+    document.getElementById('playPauseButton').title = MSG['pauseTooltip'];
     console.log(state);
   };
 
